@@ -130,10 +130,20 @@ export default function OrderConfirmation() {
                     </tr>
                   ))}
                   {Array.isArray(items) && items.length > 0 && (
-                    <tr>
-                      <td colSpan={4} className="text-left font-bold">סה&quot;כ להזמנה:</td>
-                      <td className="text-success font-bold">₪{order.total?.toFixed(2)}</td>
-                    </tr>
+                    <>
+                      <tr>
+                        <td colSpan={4} className="text-left font-bold">סה"כ ביניים (מוצרים):</td>
+                        <td className="text-success font-bold">₪{order.total && order.shipping ? (order.total - order.shipping).toFixed(2) : ''}</td>
+                      </tr>
+                      <tr>
+                        <td colSpan={4} className="text-left font-bold">משלוח:</td>
+                        <td className="text-primary font-bold">₪{order.shipping?.toFixed(2) || '0.00'}</td>
+                      </tr>
+                      <tr>
+                        <td colSpan={4} className="text-left font-bold text-lg">סה"כ לתשלום (כולל משלוח):</td>
+                        <td className="text-success font-bold text-lg">₪{order.total?.toFixed(2)}</td>
+                      </tr>
+                    </>
                   )}
                 </tbody>
               </table>
