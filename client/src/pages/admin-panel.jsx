@@ -14,6 +14,9 @@ import { format } from "date-fns";
 import { he } from "date-fns/locale";
 import { getApiBaseUrl } from "@/lib/utils";
 import PropTypes from "prop-types";
+import { DateRange } from 'react-date-range';
+import 'react-date-range/dist/styles.css';
+import 'react-date-range/dist/theme/default.css';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -69,7 +72,14 @@ export default function AdminPanel() {
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [ordersSearchTerm, setOrdersSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [dateRange, setDateRange] = useState({ from: '', to: '' });
+  const [dateRange, setDateRange] = useState([
+    {
+      startDate: null,
+      endDate: null,
+      key: 'selection',
+    },
+  ]);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [selectedProductCategory, setSelectedProductCategory] = useState("all");
@@ -91,14 +101,14 @@ export default function AdminPanel() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      loadOrders(ordersPage, dateRange.from, dateRange.to);
+      loadOrders(ordersPage, dateRange[0].startDate, dateRange[0].endDate);
       loadData();
     }
-  }, [isAuthenticated, ordersPage, dateRange.from, dateRange.to]);
+  }, [isAuthenticated, ordersPage, dateRange[0].startDate, dateRange[0].endDate]);
 
   useEffect(() => {
     filterOrders();
-  }, [orders, ordersSearchTerm, statusFilter, dateRange.from, dateRange.to]);
+  }, [orders, ordersSearchTerm, statusFilter, dateRange[0].startDate, dateRange[0].endDate]);
   
   useEffect(() => {
     filterProducts();
@@ -173,9 +183,9 @@ export default function AdminPanel() {
     if (statusFilter !== "all") {
       filtered = filtered.filter(o => o.status === statusFilter);
     }
-    if (dateRange.from && dateRange.to) {
-      const fromDate = new Date(dateRange.from);
-      const toDate = new Date(dateRange.to);
+    if (dateRange[0].startDate && dateRange[0].endDate) {
+      const fromDate = new Date(dateRange[0].startDate);
+      const toDate = new Date(dateRange[0].endDate);
       filtered = filtered.filter(o => {
         const created = new Date(o.createdAt);
         return created >= fromDate && created <= toDate;
@@ -339,12 +349,35 @@ export default function AdminPanel() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col md:flex-row gap-4 mb-6 items-center">
-                  <div className="flex gap-2 items-center">
-                    <span>מתאריך:</span>
-                    <input type="date" value={dateRange.from} onChange={e => setDateRange(r => ({ ...r, from: e.target.value }))} className="border rounded px-2 py-1" />
-                    <span>עד:</span>
-                    <input type="date" value={dateRange.to} onChange={e => setDateRange(r => ({ ...r, to: e.target.value }))} className="border rounded px-2 py-1" />
-                    <Button variant="ghost" size="sm" onClick={() => setDateRange({ from: '', to: '' })}>נקה</Button>
+                  <div className="relative flex gap-2 items-center">
+                    <button
+                      className="border rounded px-3 py-1 bg-white shadow-sm hover:bg-primary/10 transition text-sm"
+                      onClick={() => setShowDatePicker(v => !v)}
+                      type="button"
+                    >
+                      {dateRange[0].startDate && dateRange[0].endDate
+                        ? `${format(dateRange[0].startDate, 'dd/MM/yyyy')} - ${format(dateRange[0].endDate, 'dd/MM/yyyy')}`
+                        : 'בחר טווח תאריכים'}
+                    </button>
+                    {dateRange[0].startDate && dateRange[0].endDate && (
+                      <Button variant="ghost" size="sm" onClick={() => setDateRange([{ startDate: null, endDate: null, key: 'selection' }])}>נקה</Button>
+                    )}
+                    {showDatePicker && (
+                      <div className="absolute z-50 mt-2 right-0 bg-white rounded-xl shadow-2xl border p-4" style={{ direction: 'ltr' }}>
+                        <DateRange
+                          editableDateInputs={true}
+                          onChange={item => {
+                            setDateRange([item.selection]);
+                            setShowDatePicker(false);
+                          }}
+                          moveRangeOnFirstSelection={false}
+                          ranges={dateRange}
+                          maxDate={new Date()}
+                          rangeColors={["#22c55e"]}
+                          locale={he}
+                        />
+                      </div>
+                    )}
                   </div>
                   <div className="relative flex-1">
                     <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
