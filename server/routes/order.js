@@ -74,7 +74,7 @@ router.post('/', [
           const unit_price = product.base_price; // מחיר ליחידת משקל (למשל ל-100 גרם)
           // Calculate total price for this item
           const price = (weight / product.base_weight) * product.base_price;
-          const total_price = (item.quantity || 1) * price;
+          const total_price = (item.quantity || 1) * ((weight / product.base_weight) * product.base_price);
           const orderItem = new OrderItem({
             ...item,
             order_id: order._id,
