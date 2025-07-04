@@ -117,9 +117,14 @@ export default function OrderConfirmation() {
                 <tbody>
                   {Array.isArray(items) && items.map((item) => (
                     <tr key={item._id || item.id} className="hover:bg-accent/10 transition">
-                      <td className="px-4 py-2 text-text">{item.product_name || item.product_id?.name || '—'}</td>
+                      <td className="px-4 py-2 text-text flex items-center gap-2">
+                        {item.image && (
+                          <img src={item.image} alt={item.product_name} className="w-10 h-10 rounded-full object-cover border border-border shadow" />
+                        )}
+                        {item.product_name || '—'}
+                      </td>
                       <td className="px-4 py-2 text-text">{item.selectedWeight || item.weight || item.base_weight || 100} גרם</td>
-                      <td className="px-4 py-2 text-text">₪{item.unit_price?.toFixed(2) || item.base_price?.toFixed(2)} / {item.base_weight || 100} גרם</td>
+                      <td className="px-4 py-2 text-text">₪{item.base_price?.toFixed(2)} / {item.base_weight || 100} גרם</td>
                       <td className="px-4 py-2 text-success font-bold">₪{item.total_price?.toFixed(2)}</td>
                     </tr>
                   ))}
