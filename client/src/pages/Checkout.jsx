@@ -88,7 +88,11 @@ export default function Checkout() {
         product_name: item.name,
         price: item.price,
         quantity: item.quantity,
-        subtotal: item.price * item.quantity
+        subtotal: item.price * item.quantity,
+        selectedWeight: item.selectedWeight,
+        base_weight: item.base_weight,
+        base_price: item.base_price,
+        image: item.image || item.image_url
       }));
       const orderRes = await fetch(`${getApiBaseUrl()}/api/orders`, {
         method: "POST",

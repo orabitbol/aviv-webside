@@ -78,15 +78,15 @@ router.post('/', [
           const orderItem = new OrderItem({
             ...item,
             order_id: order._id,
-            weight,
-            unit_price,
-            price,
-            product_name: product.name,
-            total_price,
+            weight: item.selectedWeight || item.weight || (item.quantity * product.base_weight),
+            unit_price: item.base_price || product.base_price,
+            price: item.price, // המחיר ליחידת משקל כפי שנשלח מה-Frontend
+            product_name: item.product_name || product.name,
+            total_price: item.subtotal || (item.price * item.quantity),
             selectedWeight: item.selectedWeight,
-            base_weight: product.base_weight,
-            base_price: product.base_price,
-            image: product.image
+            base_weight: item.base_weight || product.base_weight,
+            base_price: item.base_price || product.base_price,
+            image: item.image || product.image
           });
           await orderItem.save();
           return orderItem;
