@@ -83,8 +83,6 @@ export default function AdminPanel() {
 
   const [orderItemsModal, setOrderItemsModal] = useState({ open: false, items: [], loading: false, orderId: null });
 
-  const [showPreview, setShowPreview] = useState(false);
-
   useEffect(() => {
     checkAuth();
   }, []);
@@ -155,9 +153,9 @@ export default function AdminPanel() {
       const categoriesData = await categoriesRes.json();
       const ordersArr = Array.isArray(ordersData.data) ? ordersData.data : (Array.isArray(ordersData) ? ordersData : []);
       setOrders(ordersArr);
-      setProducts(productsData);
-      setCategories(categoriesData);
-      setFilteredProducts(productsData);
+      setProducts(Array.isArray(productsData.data) ? productsData.data : []);
+      setCategories(Array.isArray(categoriesData.data) ? categoriesData.data : []);
+      setFilteredProducts(Array.isArray(productsData.data) ? productsData.data : []);
     } catch (error) {
       console.error('שגיאה בטעינת נתונים:', error);
     }
@@ -462,7 +460,12 @@ export default function AdminPanel() {
             <Card>
               <CardHeader>
                 <div className="flex justify-between items-center">
-                  <AddProductDialog categories={Array.isArray(categories) ? categories : []} onProductAdded={loadData} selectedCategoryId={selectedProductCategory} />
+                  <AddProductDialog 
+                    categories={Array.isArray(categories) ? categories : []} 
+                    onProductAdded={loadData} 
+                    selectedCategoryId={selectedProductCategory}
+                    setProductsPage={setProductsPage}
+                  />
                    <div className="flex items-center gap-4">
                      <Select value={selectedProductCategory} onValueChange={setSelectedProductCategory}>
                         <SelectTrigger className="w-48"><SelectValue placeholder="סינון לפי קטגוריה" /></SelectTrigger>
@@ -503,7 +506,7 @@ export default function AdminPanel() {
 
           <TabsContent value="categories">
             <Card>
-              <CardHeader><div className="flex justify-between items-center"><AddCategoryDialog onCategoryAdded={loadData} /><CardTitle>ניהול קטגוריות</CardTitle></div></CardHeader>
+              <CardHeader><div className="flex justify-between items-center"><AddCategoryDialog onCategoryAdded={loadData} setCategoriesPage={setCategoriesPage} /><CardTitle>ניהול קטגוריות</CardTitle></div></CardHeader>
               <CardContent>
                 <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>פעולות</TableHead><TableHead>סטטוס</TableHead><TableHead>מוצרים</TableHead><TableHead>שם</TableHead><TableHead>תמונה</TableHead></TableRow></TableHeader><TableBody>
                   {Array.isArray(categories) && categories.map((c) => (<TableRow key={c._id || c.id}>
@@ -521,24 +524,11 @@ export default function AdminPanel() {
                     ).length}</TableCell>
                     <TableCell className="font-medium">{c.name}</TableCell>
                     <TableCell>
-                      <div className="relative flex flex-col items-center justify-center w-36 h-36">
-                        <label htmlFor="category-image-upload" className="flex flex-col items-center justify-center w-36 h-36 rounded-full border-4 border-primary bg-white shadow-lg cursor-pointer hover:bg-primary/10 transition group">
-                          {c.image_url ? (
-                            <img src={c.image_url.startsWith('/uploads') ? `${getApiBaseUrl()}${c.image_url}` : c.image_url} alt={c.name} className="w-full h-full object-cover rounded-full" />
-                          ) : (
-                            <span className="flex flex-col items-center justify-center text-primary group-hover:text-accent">
-                              <svg xmlns='http://www.w3.org/2000/svg' className="w-10 h-10 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5m0 0l5 5m-5-5v12" /></svg>
-                              <span className="font-bold">העלה תמונה</span>
-                            </span>
-                          )}
-                          <input id="category-image-upload" type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-                        </label>
-                        {c.image_url && (
-                          <button type="button" onClick={() => { setImageFile(null); setImagePreview(""); }}
-                            className="absolute top-1 left-1 bg-white rounded-full shadow p-1 hover:bg-red-100 transition"
-                            title="הסר תצוגה מקדימה">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                          </button>
+                      <div className="w-14 h-14 rounded-full overflow-hidden bg-white border-2 border-primary shadow flex items-center justify-center mx-auto">
+                        {c.image_url ? (
+                          <img src={c.image_url.startsWith('/uploads') ? `${getApiBaseUrl()}${c.image_url}` : c.image_url} alt={c.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-gray-400">—</span>
                         )}
                       </div>
                     </TableCell>
@@ -561,9 +551,9 @@ export default function AdminPanel() {
   );
 }
 
-function AddProductDialog({ categories, onProductAdded, selectedCategoryId }) {
+function AddProductDialog({ categories, onProductAdded, selectedCategoryId, setProductsPage }) {
   const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState({ name: "", description: "", category_id: "", image: "", is_active: true, base_weight: "", base_price: "", weight_step: "" });
+  const [formData, setFormData] = useState({ name: "", description: "", category_id: selectedCategoryId || "", image: "", is_active: true, base_weight: "", base_price: "", weight_step: "" });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
   const [showPreview, setShowPreview] = useState(false);
@@ -581,10 +571,6 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId }) {
       setImagePreview(URL.createObjectURL(file));
       setFormData(prev => ({ ...prev, image: "" }));
     }
-  };
-
-  const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
@@ -623,6 +609,7 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId }) {
       setFormData({ name: "", description: "", category_id: "", image: "", is_active: true, base_weight: "", base_price: "", weight_step: "" });
       setImageFile(null);
       setImagePreview("");
+      if (typeof setProductsPage === 'function') setProductsPage(1);
       onProductAdded();
     } catch (error) { 
       console.error('שגיאה בהוספת מוצר:', error); 
@@ -630,23 +617,25 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId }) {
     }
   };
 
-  // תצוגה מקדימה של המוצר
   const renderPreview = () => (
     <Dialog open={showPreview} onOpenChange={setShowPreview}>
-      <DialogContent className="max-w-lg" dir="rtl">
+      <DialogContent className="max-w-lg rounded-3xl shadow-2xl bg-gradient-to-br from-white via-slate-50 to-primary/10 backdrop-blur-xl border border-primary/20 p-10" dir="rtl">
         <DialogHeader>
-          <DialogTitle>תצוגה מקדימה</DialogTitle>
+          <DialogTitle className="text-3xl font-extrabold text-primary mb-4 tracking-tight">תצוגה מקדימה למוצר</DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col items-center p-6">
-          <div className="w-40 h-40 rounded-full overflow-hidden border-8 border-white shadow-lg bg-white flex items-center justify-center mb-4">
-            <img
-              src={imagePreview || formData.image || 'https://images.unsplash.com/photo-1508747703725-719777637510?w=300&h=300&fit=crop&q=80'}
-              alt={formData.name}
-              className="w-full h-full object-cover"
-            />
+        <div className="flex flex-col items-center gap-6">
+          <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-primary bg-white shadow-lg flex items-center justify-center">
+            {imagePreview ? (
+              <img src={imagePreview} alt="תצוגה מקדימה" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-primary font-bold">אין תמונה</span>
+            )}
           </div>
-          <div className="text-xl font-bold text-primary mb-2">{formData.name || 'שם המוצר'}</div>
-          <div className="text-muted text-sm mb-2">{formData.description || 'תיאור המוצר'}</div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-primary mb-2">{formData.name || "שם המוצר"}</div>
+            <div className="text-lg text-gray-700">{formData.description || "תיאור המוצר"}</div>
+          </div>
+          <Button onClick={() => setShowPreview(false)} className="rounded-full bg-gradient-to-r from-primary to-accent text-white font-bold px-8 py-3 mt-4">סגור</Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -664,9 +653,9 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId }) {
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-10 text-right">
           <div className="flex flex-col gap-6">
             <Label htmlFor="name" className="text-lg font-bold">שם</Label>
-            <Input id="name" value={formData.name} onChange={handleInputChange} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
+            <Input id="name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
             <Label htmlFor="description" className="text-lg font-bold">תיאור</Label>
-            <Textarea id="description" value={formData.description} onChange={handleInputChange} className="rounded-2xl text-lg px-6 py-3 shadow-sm min-h-[80px]"/>
+            <Textarea id="description" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="rounded-2xl text-lg px-6 py-3 shadow-sm min-h-[80px]"/>
             <Label htmlFor="category" className="text-lg font-bold">קטגוריה</Label>
             <Select value={formData.category_id} onValueChange={(v) => setFormData({...formData, category_id: v})}>
               <SelectTrigger className="rounded-full text-lg px-6 py-3 shadow-sm"><SelectValue placeholder="בחר קטגוריה" /></SelectTrigger>
@@ -687,11 +676,11 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId }) {
               <input id="product-image-upload" type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
             </label>
             <Label htmlFor="base_weight" className="text-lg font-bold">משקל בסיס (גרם)</Label>
-            <Input id="base_weight" type="number" value={formData.base_weight} onChange={handleInputChange} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
+            <Input id="base_weight" type="number" value={formData.base_weight} onChange={(e) => setFormData({...formData, base_weight: e.target.value})} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
             <Label htmlFor="base_price" className="text-lg font-bold">מחיר למשקל בסיס</Label>
-            <Input id="base_price" type="number" step="0.01" value={formData.base_price} onChange={handleInputChange} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
+            <Input id="base_price" type="number" step="0.01" value={formData.base_price} onChange={(e) => setFormData({...formData, base_price: e.target.value})} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
             <Label htmlFor="weight_step" className="text-lg font-bold">קפיצת משקל (גרם)</Label>
-            <Input id="weight_step" type="number" value={formData.weight_step} onChange={handleInputChange} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
+            <Input id="weight_step" type="number" value={formData.weight_step} onChange={(e) => setFormData({...formData, weight_step: e.target.value})} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
             <div className="flex gap-4 mt-4 w-full">
               <Button type="button" variant="outline" className="rounded-full w-1/2 text-lg font-bold border-primary text-primary hover:bg-primary/10" onClick={() => setShowPreview(true)}>תצוגה מקדימה</Button>
               <Button type="submit" className="rounded-full w-1/2 text-lg font-bold bg-gradient-to-r from-primary to-accent hover:from-accent hover:to-primary text-white shadow-lg transition-all">הוסף מוצר</Button>
@@ -708,14 +697,14 @@ AddProductDialog.propTypes = {
   categories: PropTypes.array.isRequired,
   onProductAdded: PropTypes.func.isRequired,
   selectedCategoryId: PropTypes.string,
+  setProductsPage: PropTypes.func.isRequired,
 };
 
-function AddCategoryDialog({ onCategoryAdded }) {
+function AddCategoryDialog({ onCategoryAdded, setCategoriesPage }) {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({ name: "", description: "", slug: "", image_url: "", is_active: true });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
-  const [showPreview, setShowPreview] = useState(false);
 
   function makeSlug(str) {
     return str
@@ -733,12 +722,12 @@ function AddCategoryDialog({ onCategoryAdded }) {
     }
   };
 
-  const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.name.trim()) {
+      alert('יש למלא שם קטגוריה');
+      return;
+    }
     try {
       let imageUrl = formData.image_url;
       if (imageFile) {
@@ -753,7 +742,11 @@ function AddCategoryDialog({ onCategoryAdded }) {
         if (!res.ok) throw new Error(data.error || 'שגיאה בהעלאת תמונה');
         imageUrl = data.imageUrl;
       }
-      const slug = formData.slug ? makeSlug(formData.slug) : makeSlug(formData.name);
+      const slug = makeSlug(formData.slug || formData.name);
+      if (!slug) {
+        alert('לא ניתן ליצור כתובת באנגלית (slug) מהשם.');
+        return;
+      }
       await fetch("/api/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -763,31 +756,10 @@ function AddCategoryDialog({ onCategoryAdded }) {
       setFormData({ name: "", description: "", slug: "", image_url: "", is_active: true });
       setImageFile(null);
       setImagePreview("");
-      onCategoryAdded();
+      if (typeof setCategoriesPage === 'function') setCategoriesPage(1);
+      if (typeof onCategoryAdded === 'function') onCategoryAdded();
     } catch (error) { console.error('שגיאה בהוספת קטגוריה:', error); }
   };
-
-  // תצוגה מקדימה של הקטגוריה
-  const renderPreview = () => (
-    <Dialog open={showPreview} onOpenChange={setShowPreview}>
-      <DialogContent className="max-w-lg" dir="rtl">
-        <DialogHeader>
-          <DialogTitle>תצוגה מקדימה</DialogTitle>
-        </DialogHeader>
-        <div className="flex flex-col items-center p-6">
-          <div className="w-40 h-40 rounded-full overflow-hidden border-8 border-white shadow-lg bg-white flex items-center justify-center mb-4">
-            <img
-              src={imagePreview || formData.image_url || 'https://images.unsplash.com/photo-1508747703725-719777637510?w=300&h=300&fit=crop&q=80'}
-              alt={formData.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="text-xl font-bold text-primary mb-2">{formData.name || 'שם הקטגוריה'}</div>
-          <div className="text-muted text-sm mb-2">{formData.description || 'תיאור הקטגוריה'}</div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -816,21 +788,12 @@ function AddCategoryDialog({ onCategoryAdded }) {
                 )}
                 <input id="category-image-upload" type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
               </label>
-              {imagePreview && (
-                <button type="button" onClick={() => { setImageFile(null); setImagePreview(""); }}
-                  className="absolute top-1 left-1 bg-white rounded-full shadow p-1 hover:bg-red-100 transition"
-                  title="הסר תצוגה מקדימה">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              )}
             </div>
           </div>
           <div className="flex gap-4 mt-4 w-full">
-            <Button type="button" variant="outline" className="rounded-full w-1/2 text-lg font-bold border-primary text-primary hover:bg-primary/10" onClick={() => setShowPreview(true)}>תצוגה מקדימה</Button>
             <Button type="submit" className="rounded-full w-1/2 text-lg font-bold bg-gradient-to-r from-primary to-accent hover:from-accent hover:to-primary text-white shadow-lg transition-all">הוסף קטגוריה</Button>
           </div>
         </form>
-        {showPreview && renderPreview()}
       </DialogContent>
     </Dialog>
   );
@@ -838,6 +801,7 @@ function AddCategoryDialog({ onCategoryAdded }) {
 
 AddCategoryDialog.propTypes = {
   onCategoryAdded: PropTypes.func.isRequired,
+  setCategoriesPage: PropTypes.func.isRequired,
 };
 
 function EditProductDialog({ product, categories, onProductUpdated }) {
@@ -868,10 +832,6 @@ function EditProductDialog({ product, categories, onProductUpdated }) {
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }
-  };
-
-  const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
@@ -925,9 +885,9 @@ function EditProductDialog({ product, categories, onProductUpdated }) {
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-10 text-right">
           <div className="flex flex-col gap-6">
             <Label htmlFor="name" className="text-lg font-bold">שם</Label>
-            <Input id="name" value={formData.name} onChange={handleInputChange} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
+            <Input id="name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
             <Label htmlFor="description" className="text-lg font-bold">תיאור</Label>
-            <Textarea id="description" value={formData.description} onChange={handleInputChange} className="rounded-2xl text-lg px-6 py-3 shadow-sm min-h-[80px]"/>
+            <Textarea id="description" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="rounded-2xl text-lg px-6 py-3 shadow-sm min-h-[80px]"/>
             <Label htmlFor="category" className="text-lg font-bold">קטגוריה</Label>
             <Select value={formData.category_id} onValueChange={(v) => setFormData({...formData, category_id: v})}>
               <SelectTrigger className="rounded-full text-lg px-6 py-3 shadow-sm"><SelectValue placeholder="בחר קטגוריה" /></SelectTrigger>
@@ -948,11 +908,11 @@ function EditProductDialog({ product, categories, onProductUpdated }) {
               <input id="edit-product-image-upload" type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
             </label>
             <Label htmlFor="base_weight" className="text-lg font-bold">משקל בסיס (גרם)</Label>
-            <Input id="base_weight" type="number" value={formData.base_weight} onChange={handleInputChange} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
+            <Input id="base_weight" type="number" value={formData.base_weight} onChange={(e) => setFormData({...formData, base_weight: e.target.value})} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
             <Label htmlFor="base_price" className="text-lg font-bold">מחיר למשקל בסיס</Label>
-            <Input id="base_price" type="number" step="0.01" value={formData.base_price} onChange={handleInputChange} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
+            <Input id="base_price" type="number" step="0.01" value={formData.base_price} onChange={(e) => setFormData({...formData, base_price: e.target.value})} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
             <Label htmlFor="weight_step" className="text-lg font-bold">קפיצת משקל (גרם)</Label>
-            <Input id="weight_step" type="number" value={formData.weight_step} onChange={handleInputChange} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
+            <Input id="weight_step" type="number" value={formData.weight_step} onChange={(e) => setFormData({...formData, weight_step: e.target.value})} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
             <div className="flex gap-4 mt-4 w-full">
               <Button type="submit" className="rounded-full w-full text-lg font-bold bg-gradient-to-r from-primary to-accent hover:from-accent hover:to-primary text-white shadow-lg transition-all">שמור שינויים</Button>
             </div>
@@ -995,10 +955,6 @@ function EditCategoryDialog({ category, onCategoryUpdated }) {
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }
-  };
-
-  const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
@@ -1044,11 +1000,11 @@ function EditCategoryDialog({ category, onCategoryUpdated }) {
           <div className="flex flex-col md:flex-row gap-8 items-center">
             <div className="flex flex-col gap-4 flex-1">
               <Label htmlFor="name" className="text-lg font-bold">שם</Label>
-              <Input id="name" value={formData.name} onChange={handleInputChange} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
+              <Input id="name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
               <Label htmlFor="description" className="text-lg font-bold">תיאור</Label>
-              <Textarea id="description" value={formData.description} onChange={handleInputChange} className="rounded-2xl text-lg px-6 py-3 shadow-sm min-h-[60px]"/>
+              <Textarea id="description" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})}/>
               <Label htmlFor="slug" className="text-lg font-bold">Slug (כתובת באנגלית)</Label>
-              <Input id="slug" value={formData.slug} onChange={handleInputChange} placeholder="נוצר אוטומטית מהשם" className="rounded-full text-lg px-6 py-3 shadow-sm"/>
+              <Input id="slug" value={formData.slug} onChange={e => setFormData({ ...formData, slug: e.target.value })} placeholder="נוצר אוטומטית מהשם" className="rounded-full text-lg px-6 py-3 shadow-sm"/>
               <Label htmlFor="is_active" className="text-lg font-bold">סטטוס</Label>
               <Select value={formData.is_active ? 'true' : 'false'} onValueChange={v => setFormData({...formData, is_active: v === 'true'})}>
                 <SelectTrigger className="rounded-full text-lg px-6 py-3 shadow-sm"><SelectValue /></SelectTrigger>
@@ -1073,11 +1029,9 @@ function EditCategoryDialog({ category, onCategoryUpdated }) {
             </div>
           </div>
           <div className="flex gap-4 mt-4 w-full">
-            <Button type="button" variant="outline" className="rounded-full w-1/2 text-lg font-bold border-primary text-primary hover:bg-primary/10" onClick={() => setShowPreview(true)}>תצוגה מקדימה</Button>
             <Button type="submit" className="rounded-full w-1/2 text-lg font-bold bg-gradient-to-r from-primary to-accent hover:from-accent hover:to-primary text-white shadow-lg transition-all">שמור שינויים</Button>
           </div>
         </form>
-        {showPreview && renderPreview()}
       </DialogContent>
     </Dialog>
   );
