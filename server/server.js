@@ -20,6 +20,9 @@ app.use(session({
   cookie: { secure: false, httpOnly: true, maxAge: 1000 * 60 * 60 * 24 }
 }));
 
+// הגשת קבצים סטטיים מתיקיית uploads
+app.use('/uploads', express.static(__dirname + '/uploads'));
+
 // Routes
 app.use('/api/categories', require('./routes/category'));
 app.use('/api/products', require('./routes/product'));

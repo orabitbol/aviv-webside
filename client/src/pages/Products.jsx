@@ -97,12 +97,16 @@ export default function Products() {
     const minWeight = product.base_weight || 100;
     const step = product.weight_step || 50;
     const isOutOfStock = product.is_active === false;
+    let imageSrc = product.image || product.image_url || 'https://images.unsplash.com/photo-1508747703725-719777637510?w=300&h=300&fit=crop&q=80';
+    if (product.image && product.image.startsWith('/uploads')) {
+      imageSrc = `http://localhost:5000${product.image}`;
+    }
     return (
       <div className={`flex flex-col items-center p-6 transition-all duration-300 ${isOutOfStock ? 'opacity-60 grayscale' : ''} rounded-3xl`}
         style={isOutOfStock ? { pointerEvents: 'none' } : {}}>
         <div className="w-40 h-40 rounded-full overflow-hidden border-8 border-white shadow-lg bg-white flex items-center justify-center mb-4 relative">
           <img
-            src={product.image_url || 'https://images.unsplash.com/photo-1508747703725-719777637510?w=300&h=300&fit=crop&q=80'}
+            src={imageSrc}
             alt={product.name}
             className={`w-full h-full object-cover ${isOutOfStock ? 'grayscale' : ''}`}
           />

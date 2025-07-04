@@ -2,6 +2,20 @@ const express = require('express');
 const Product = require('../models/Product');
 const { requireAdmin } = require('../auth/middleware');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+
+// הגדרת multer לשמירת קבצים בתיקיית uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, '../uploads'));
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + '-' + file.originalname);
+  }
+});
+const upload = multer({ storage: storage });
 
 // Get all products
 router.get('/', async (req, res) => {
@@ -27,7 +41,11 @@ router.get('/:id', async (req, res) => {
 // Create new product
 router.post('/', requireAdmin, async (req, res) => {
   try {
-    const product = new Product(req.body);
+    const productData = { ...req.body };
+    if (req.body.image) {
+      productData.image = req.body.image;
+    }
+    const product = new Product(productData);
     await product.save();
     res.status(201).json(product);
   } catch (err) {
@@ -55,6 +73,16 @@ router.delete('/:id', requireAdmin, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// העלאת תמונה
+router.post('/upload-image', requireAdmin, upload.single('image'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+  // מחזיר את הנתיב היחסי של התמונה
+  const imageUrl = `/uploads/${req.file.filename}`;
+  res.json({ imageUrl });
 });
 
 module.exports = router; 

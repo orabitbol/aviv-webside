@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Download, Plus, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Download, Plus, Search, ChevronLeft, ChevronRight, Edit } from "lucide-react";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
 import { DatePicker } from "@/components/ui/datepicker";
@@ -260,6 +260,15 @@ export default function AdminPanel() {
     loadData();
   };
 
+  const returnToStock = async (productId) => {
+    await fetch(`/api/products/${productId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_active: true })
+    });
+    loadData();
+  };
+
   const deleteProduct = async (productId) => {
     await fetch(`/api/products/${productId}`, {
       method: 'DELETE' });
@@ -480,7 +489,12 @@ export default function AdminPanel() {
                     <TableCell>{categories.find(c => c._id === p.category_id || c.id === p.category_id)?.name || 'לא ידוע'}</TableCell>
                     <TableCell className="font-medium">{p.name}</TableCell>
                     <TableCell className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => markOutOfStock(p._id)} className="text-warning border-warning">נגמר המלאי</Button>
+                      {p.is_active ? (
+                        <Button size="sm" variant="outline" onClick={() => markOutOfStock(p._id)} className="text-warning border-warning">נגמר המלאי</Button>
+                      ) : (
+                        <Button size="sm" variant="outline" onClick={() => returnToStock(p._id)} className="text-success border-success">החזר למלאי</Button>
+                      )}
+                      <EditProductDialog product={p} categories={categories} onProductUpdated={loadData} />
                       <Button size="sm" variant="destructive" onClick={() => deleteProduct(p._id)}>הסר מוצר</Button>
                     </TableCell>
                   </TableRow>))}
@@ -526,6 +540,7 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId }) {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
   const [showPreview, setShowPreview] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if(selectedCategoryId && selectedCategoryId !== 'all') {
@@ -551,8 +566,18 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId }) {
     try {
       let imageUrl = formData.image;
       if (imageFile) {
-        // simulate upload (replace with real upload logic if needed)
-        imageUrl = imagePreview;
+        setUploading(true);
+        const formDataImg = new FormData();
+        formDataImg.append('image', imageFile);
+        const res = await fetch('/api/products/upload-image', {
+          method: 'POST',
+          body: formDataImg,
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'שגיאה בהעלאת תמונה');
+        imageUrl = data.imageUrl;
+        setUploading(false);
       }
       const payload = {
         name: formData.name,
@@ -575,7 +600,11 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId }) {
       setImageFile(null);
       setImagePreview("");
       onProductAdded();
-    } catch (error) { console.error('שגיאה בהוספת מוצר:', error); }
+    } catch (error) { 
+      setUploading(false);
+      console.error('שגיאה בהוספת מוצר:', error); 
+      alert(error.message || 'שגיאה בהוספת מוצר');
+    }
   };
 
   // תצוגה מקדימה של המוצר
@@ -686,5 +715,132 @@ function AddCategoryDialog({ onCategoryAdded }) {
       <div><Label htmlFor="slug">Slug (מזהה לכתובת באנגלית)</Label><Input id="slug" value={formData.slug} onChange={(e) => setFormData({...formData, slug: e.target.value})} placeholder="נוצר אוטומטית מהשם"/></div>
       <div><Label htmlFor="image">כתובת תמונה</Label><Input id="image" value={formData.image_url} onChange={(e) => setFormData({...formData, image_url: e.target.value})} placeholder="https://..."/></div>
       <Button type="submit" className="w-full">הוסף קטגוריה</Button></form></DialogContent></Dialog>
+  );
+}
+
+function EditProductDialog({ product, categories, onProductUpdated }) {
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    ...product,
+    base_weight: product.base_weight !== undefined ? String(product.base_weight) : "",
+    base_price: product.base_price !== undefined ? String(product.base_price) : "",
+    weight_step: product.weight_step !== undefined ? String(product.weight_step) : ""
+  });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(product.image || "");
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    setFormData({
+      ...product,
+      base_weight: product.base_weight !== undefined ? String(product.base_weight) : "",
+      base_price: product.base_price !== undefined ? String(product.base_price) : "",
+      weight_step: product.weight_step !== undefined ? String(product.weight_step) : ""
+    });
+    setImagePreview(product.image || "");
+    setImageFile(null);
+  }, [product, open]);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      let imageUrl = formData.image;
+      if (imageFile) {
+        setUploading(true);
+        const formDataImg = new FormData();
+        formDataImg.append('image', imageFile);
+        const res = await fetch('/api/products/upload-image', {
+          method: 'POST',
+          body: formDataImg,
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'שגיאה בהעלאת תמונה');
+        imageUrl = data.imageUrl;
+        setUploading(false);
+      }
+      const payload = {
+        name: formData.name,
+        description: formData.description,
+        price: Number(formData.base_price),
+        image: imageUrl,
+        category_id: formData.category_id,
+        is_active: formData.is_active,
+        base_weight: Number(formData.base_weight),
+        base_price: Number(formData.base_price),
+        weight_step: Number(formData.weight_step)
+      };
+      await fetch(`/api/products/${product._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      setOpen(false);
+      onProductUpdated();
+    } catch (error) {
+      setUploading(false);
+      alert(error.message || 'שגיאה בעדכון מוצר');
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="secondary" className="flex items-center gap-1"><Edit className="w-4 h-4" />ערוך</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl rounded-3xl shadow-2xl bg-gradient-to-br from-white via-slate-50 to-primary/10 backdrop-blur-xl border border-primary/20 p-10" dir="rtl">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold text-primary mb-4">עריכת מוצר</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-10 text-right">
+          <div className="flex flex-col gap-6">
+            <Label htmlFor="name" className="text-lg font-bold">שם</Label>
+            <Input id="name" value={formData.name} onChange={handleInputChange} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
+            <Label htmlFor="description" className="text-lg font-bold">תיאור</Label>
+            <Textarea id="description" value={formData.description} onChange={handleInputChange} className="rounded-2xl text-lg px-6 py-3 shadow-sm min-h-[80px]"/>
+            <Label htmlFor="category" className="text-lg font-bold">קטגוריה</Label>
+            <Select value={formData.category_id} onValueChange={(v) => setFormData({...formData, category_id: v})}>
+              <SelectTrigger className="rounded-full text-lg px-6 py-3 shadow-sm"><SelectValue placeholder="בחר קטגוריה" /></SelectTrigger>
+              <SelectContent>{categories.map(c => <SelectItem key={c._id || c.id} value={c._id || c.id}>{c.name}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-6 items-center justify-between">
+            <Label className="text-lg font-bold">תמונה</Label>
+            <label htmlFor="edit-product-image-upload" className="flex flex-col items-center justify-center w-36 h-36 rounded-full border-4 border-primary bg-white shadow-lg cursor-pointer hover:bg-primary/10 transition group">
+              {imagePreview ? (
+                <img src={imagePreview} alt="תצוגה מקדימה" className="w-full h-full object-cover rounded-full" />
+              ) : (
+                <span className="flex flex-col items-center justify-center text-primary group-hover:text-accent">
+                  <svg xmlns='http://www.w3.org/2000/svg' className="w-10 h-10 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5m0 0l5 5m-5-5v12" /></svg>
+                  <span className="font-bold">העלה תמונה</span>
+                </span>
+              )}
+              <input id="edit-product-image-upload" type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+            </label>
+            <Label htmlFor="base_weight" className="text-lg font-bold">משקל בסיס (גרם)</Label>
+            <Input id="base_weight" type="number" value={formData.base_weight} onChange={handleInputChange} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
+            <Label htmlFor="base_price" className="text-lg font-bold">מחיר למשקל בסיס</Label>
+            <Input id="base_price" type="number" step="0.01" value={formData.base_price} onChange={handleInputChange} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
+            <Label htmlFor="weight_step" className="text-lg font-bold">קפיצת משקל (גרם)</Label>
+            <Input id="weight_step" type="number" value={formData.weight_step} onChange={handleInputChange} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
+            <div className="flex gap-4 mt-4 w-full">
+              <Button type="submit" className="rounded-full w-full text-lg font-bold bg-gradient-to-r from-primary to-accent hover:from-accent hover:to-primary text-white shadow-lg transition-all">שמור שינויים</Button>
+            </div>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
