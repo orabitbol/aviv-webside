@@ -1,4 +1,3 @@
-import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
@@ -56,7 +55,7 @@ export default function OrderConfirmation() {
                 <h3 className="font-semibold text-text mb-2">פרטי לקוח</h3>
                 <div className="space-y-1 text-sm">
                   <p>{order.customerName} :<span className="font-medium">שם</span></p>
-                  <p>{order.customerEmail} :<span className="font-medium">דוא"ל</span></p>
+                  <p>{order.customerEmail} :<span className="font-medium">דוא&quot;ל</span></p>
                   <p>{order.phone} :<span className="font-medium">טלפון</span></p>
                 </div>
               </div>
@@ -71,7 +70,7 @@ export default function OrderConfirmation() {
                     </span>
                     :<span className="font-medium">סטטוס</span> 
                   </p>
-                  <p><span className="text-success font-bold">₪{order.total?.toFixed(2)}</span> :<span className="font-medium">סה"כ</span></p>
+                  <p><span className="text-success font-bold">₪{order.total?.toFixed(2)}</span> :<span className="font-medium">סה&quot;כ</span></p>
                 </div>
               </div>
             </div>
@@ -112,7 +111,7 @@ export default function OrderConfirmation() {
                     <th className="px-4 py-2 text-right font-bold text-text">כמות</th>
                     <th className="px-4 py-2 text-right font-bold text-text">גרמים</th>
                     <th className="px-4 py-2 text-right font-bold text-text">מחיר ל-100 גרם</th>
-                    <th className="px-4 py-2 text-right font-bold text-text">סה"כ</th>
+                    <th className="px-4 py-2 text-right font-bold text-text">סה&quot;כ</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -127,7 +126,7 @@ export default function OrderConfirmation() {
                   ))}
                   {Array.isArray(items) && items.length > 0 && (
                     <tr>
-                      <td colSpan={4} className="text-left font-bold">סה"כ להזמנה:</td>
+                      <td colSpan={4} className="text-left font-bold">סה&quot;כ להזמנה:</td>
                       <td className="text-success font-bold">₪{order.total?.toFixed(2)}</td>
                     </tr>
                   )}

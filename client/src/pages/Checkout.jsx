@@ -195,7 +195,7 @@ export default function Checkout() {
               {cartItems.map((item) => (
                 <div key={item.id} className="flex justify-between items-center text-sm">
                   <p>₪{(item.price * item.quantity).toFixed(2)}</p>
-                  <p>{item.name} x {item.quantity}</p>
+                  <p>{item.name} ({item.selectedWeight || item.weight || item.base_weight || 100} גרם)</p>
                 </div>
               ))}
               <Separator />
