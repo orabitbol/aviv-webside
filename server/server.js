@@ -12,7 +12,22 @@ const app = express();
 app.set('trust proxy', 1);
 
 // Helmet for security headers
-app.use(helmet());
+const helmetCspDirectives = {
+  ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+  "img-src": [
+    "'self'",
+    process.env.FRONTEND_URL_PROD,
+    process.env.FRONTEND_URL_DEV,
+    "data:"
+  ].filter(Boolean),
+};
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: helmetCspDirectives,
+    },
+  })
+);
 
 // Rate limiting (100 requests per 15 minutes per IP)
 const limiter = rateLimit({

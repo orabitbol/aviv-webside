@@ -132,7 +132,7 @@ export default function Homepage() {
               }
               return (
                 <Link 
-                  key={category.id} 
+                  key={category.id || category._id} 
                   to={createPageUrl(`Products?category=${category.slug}`)}
                   className="group flex flex-col items-center gap-4 text-center w-40"
                 >
@@ -141,7 +141,7 @@ export default function Homepage() {
                       <img 
                         src={imageSrc}
                         alt={category.name}
-                        className="w-full h-full object-cover rounded-full shadow-xl transition-all duration-300 group-hover:shadow-2xl group-hover:scale-105 border-4 border-surface"
+                        style={{ width: 160, height: 160, border: '2px solid red' }}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center rounded-full bg-muted text-gray-400 text-4xl font-bold border-4 border-surface">
