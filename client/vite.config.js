@@ -15,7 +15,7 @@ export default defineConfig({
   server: {
     allowedHosts: true,
     proxy: {
-      '/api': process.env.VITE_API_URL || 'http://localhost:5000'
+      '/api': process.env.VITE_API_URL || process.env.VITE_API_BASE_URL
     }
   },
   resolve: {
