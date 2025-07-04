@@ -11,9 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { CreditCard, MapPin, Check, ArrowRight, ArrowLeft } from "lucide-react";
 import { toast, Toaster } from "sonner";
-import { FaCreditCard } from 'react-icons/fa';
+import { FaCreditCard, FaBoxOpen } from 'react-icons/fa';
 import { SiBit } from 'react-icons/si';
-import { SiPaybox } from 'react-icons/si';
 
 const SOUTHERN_CITIES = [
   "באר שבע", "אילת", "ערד", "דימונה", "נתיבות", "אופקים", "שדרות", "אשקלון", "אשדוד", "קריית גת", "קריית מלאכי"
@@ -190,7 +189,7 @@ export default function Checkout() {
                   {
                     value: 'PayBox',
                     label: 'PayBox',
-                    icon: <SiPaybox className="w-10 h-10 text-green-500 mx-auto" />,
+                    icon: <FaBoxOpen className="w-10 h-10 text-green-500 mx-auto" />,
                     desc: 'תשלום קל דרך PayBox',
                   },
                 ].map(opt => (
