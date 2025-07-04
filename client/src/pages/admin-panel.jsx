@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,8 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Download, Plus, Search, ChevronLeft, ChevronRight, Edit } from "lucide-react";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
-import { DatePicker } from "@/components/ui/datepicker";
 import { getApiBaseUrl } from "@/lib/utils";
+import PropTypes from "prop-types";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -46,6 +46,12 @@ function Pagination({ currentPage, totalItems, onPageChange }) {
   );
 }
 
+Pagination.propTypes = {
+  currentPage: PropTypes.number.isRequired,
+  totalItems: PropTypes.number.isRequired,
+  onPageChange: PropTypes.func.isRequired,
+};
+
 export default function AdminPanel() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,7 +59,6 @@ export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState("orders");
 
   const [orders, setOrders] = useState([]);
-  const [ordersTotal, setOrdersTotal] = useState(0);
   const [ordersPage, setOrdersPage] = useState(1);
   const [ordersPages, setOrdersPages] = useState(1);
   const [ordersLoading, setOrdersLoading] = useState(false);
@@ -64,7 +69,7 @@ export default function AdminPanel() {
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [ordersSearchTerm, setOrdersSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [dateFilter, setDateFilter] = useState("all");
+  const [dateRange, setDateRange] = useState({ from: '', to: '' });
   
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [selectedProductCategory, setSelectedProductCategory] = useState("all");
@@ -78,9 +83,7 @@ export default function AdminPanel() {
 
   const [orderItemsModal, setOrderItemsModal] = useState({ open: false, items: [], loading: false, orderId: null });
 
-  const [dateRange, setDateRange] = useState({ from: '', to: '' });
-
-  const [formData, setFormData] = useState({ name: "", description: "", category_id: "", image: "", is_active: true, base_weight: "", base_price: "", weight_step: "" });
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -95,14 +98,14 @@ export default function AdminPanel() {
 
   useEffect(() => {
     filterOrders();
-  }, [orders, ordersSearchTerm, statusFilter, dateFilter]);
+  }, [orders, ordersSearchTerm, statusFilter, dateRange.from, dateRange.to]);
   
   useEffect(() => {
     filterProducts();
   }, [products, selectedProductCategory]);
 
   useEffect(() => {
-    if (!ordersSearchTerm && statusFilter === 'all' && dateFilter === 'all') {
+    if (!ordersSearchTerm && statusFilter === 'all') {
       setFilteredOrders(Array.isArray(orders) ? [...orders] : []);
     }
   }, [orders]);
@@ -131,11 +134,9 @@ export default function AdminPanel() {
       const data = await res.json();
       const ordersArr = Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : []);
       setOrders(ordersArr);
-      setOrdersTotal(data.total || ordersArr.length);
       setOrdersPages(data.pages || 1);
-    } catch (error) {
+    } catch {
       setOrders([]);
-      setOrdersTotal(0);
       setOrdersPages(1);
     } finally {
       setOrdersLoading(false);
@@ -187,23 +188,15 @@ export default function AdminPanel() {
   };
   
   const filterProducts = () => {
+    const safeProducts = Array.isArray(products) ? products : [];
     let filtered = selectedProductCategory === 'all' 
-      ? [...products] 
-      : products.filter(p => 
+      ? [...safeProducts] 
+      : safeProducts.filter(p => 
           p.category_id === selectedProductCategory ||
           String(p.category_id) === String(selectedProductCategory)
         );
     setFilteredProducts(filtered);
     setProductsPage(1);
-  };
-
-  const updateOrderStatus = async (orderId, newStatus) => {
-    try {
-      await Order.update(orderId, { status: newStatus });
-      loadOrders(ordersPage);
-    } catch (error) {
-      console.error('שגיאה בעדכון סטטוס הזמנה:', error);
-    }
   };
 
   const exportOrders = () => {
@@ -226,7 +219,7 @@ export default function AdminPanel() {
         return;
       }
       window.location.reload();
-    } catch (err) {
+    } catch {
       setLoginError("שגיאת התחברות");
     }
   };
@@ -351,7 +344,7 @@ export default function AdminPanel() {
                   </div>
                   <div className="relative flex-1">
                     <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input placeholder="חיפוש הזמנות..." value={ordersSearchTerm} onChange={(e) => setOrdersSearchTerm(e.target.value)} className="pr-10"/>
+                    <Input placeholder="חיפוש הזמנות..." value={ordersSearchTerm} onChange={(e) => setOrdersSearchTerm(e.target.value)} className='pr-10' />
                   </div>
                   <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-40"><SelectValue placeholder="כל הסטטוסים" /></SelectTrigger><SelectContent><SelectItem value="all">כל הסטטוסים</SelectItem><SelectItem value="pending">ממתינה</SelectItem><SelectItem value="processing">בעיבוד</SelectItem><SelectItem value="shipped">נשלחה</SelectItem><SelectItem value="delivered">התקבלה</SelectItem><SelectItem value="cancelled">בוטלה</SelectItem></SelectContent></Select>
                 </div>
@@ -359,7 +352,7 @@ export default function AdminPanel() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>מס'</TableHead>
+                        <TableHead>מס&apos;</TableHead>
                         <TableHead>תאריך</TableHead>
                         <TableHead>סטטוס</TableHead>
                         <TableHead>סכום</TableHead>
@@ -413,7 +406,7 @@ export default function AdminPanel() {
                                       </thead>
                                       <tbody>
                                         {orderItemsModal.items.map((item) => {
-                                          const product = products.find(p => p._id === item.product_id);
+                                          const product = (Array.isArray(products) ? products : []).find(p => p._id === item.product_id);
                                           return (
                                             <tr key={item._id || item.id} className="hover:bg-accent/10 transition">
                                               <td className="px-4 py-2 text-text flex items-center gap-2">
@@ -469,11 +462,11 @@ export default function AdminPanel() {
             <Card>
               <CardHeader>
                 <div className="flex justify-between items-center">
-                  <AddProductDialog categories={categories} onProductAdded={loadData} selectedCategoryId={selectedProductCategory} />
+                  <AddProductDialog categories={Array.isArray(categories) ? categories : []} onProductAdded={loadData} selectedCategoryId={selectedProductCategory} />
                    <div className="flex items-center gap-4">
                      <Select value={selectedProductCategory} onValueChange={setSelectedProductCategory}>
                         <SelectTrigger className="w-48"><SelectValue placeholder="סינון לפי קטגוריה" /></SelectTrigger>
-                        <SelectContent><SelectItem value="all">כל הקטגוריות</SelectItem>{categories.map(c => <SelectItem key={c._id || c.id} value={c._id || c.id}>{c.name}</SelectItem>)}</SelectContent>
+                        <SelectContent>{(Array.isArray(categories) ? categories : []).map(c => <SelectItem key={c._id || c.id} value={c._id || c.id}>{c.name}</SelectItem>)}</SelectContent>
                       </Select>
                       <CardTitle>ניהול מוצרים</CardTitle>
                    </div>
@@ -490,7 +483,7 @@ export default function AdminPanel() {
                       )}
                     </TableCell>
                     <TableCell>₪{p.price?.toFixed(2)}</TableCell>
-                    <TableCell>{categories.find(c => c._id === p.category_id || c.id === p.category_id)?.name || 'לא ידוע'}</TableCell>
+                    <TableCell>{(Array.isArray(categories) ? categories : []).find(c => c._id === p.category_id || c.id === p.category_id)?.name || 'לא ידוע'}</TableCell>
                     <TableCell className="font-medium">{p.name}</TableCell>
                     <TableCell className="flex gap-2">
                       {p.is_active ? (
@@ -498,12 +491,12 @@ export default function AdminPanel() {
                       ) : (
                         <Button size="sm" variant="outline" onClick={() => returnToStock(p._id)} className="text-success border-success">החזר למלאי</Button>
                       )}
-                      <EditProductDialog product={p} categories={categories} onProductUpdated={loadData} />
+                      <EditProductDialog product={p} categories={(Array.isArray(categories) ? categories : [])} onProductUpdated={loadData} />
                       <Button size="sm" variant="destructive" onClick={() => deleteProduct(p._id)}>הסר מוצר</Button>
                     </TableCell>
                   </TableRow>))}
                 </TableBody></Table></div>
-                <Pagination currentPage={productsPage} totalItems={filteredProducts.length} onPageChange={setProductsPage} />
+                <Pagination currentPage={productsPage} totalItems={Array.isArray(filteredProducts) ? filteredProducts.length : 0} onPageChange={setProductsPage} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -520,7 +513,7 @@ export default function AdminPanel() {
                       </Button>
                     </TableCell>
                     <TableCell><Badge variant={c.is_active ? 'default' : 'secondary'}>{c.is_active ? 'פעיל' : 'לא פעיל'}</Badge></TableCell>
-                    <TableCell>{products.filter(p => 
+                    <TableCell>{(Array.isArray(products) ? products : []).filter(p => 
                       p.category_id === c._id ||
                       p.category_id === c.id ||
                       String(p.category_id) === String(c._id) ||
@@ -528,11 +521,24 @@ export default function AdminPanel() {
                     ).length}</TableCell>
                     <TableCell className="font-medium">{c.name}</TableCell>
                     <TableCell>
-                      <div className="w-14 h-14 rounded-full overflow-hidden bg-white border-2 border-primary shadow flex items-center justify-center mx-auto">
-                        {c.image_url ? (
-                          <img src={c.image_url.startsWith('/uploads') ? `${getApiBaseUrl()}${c.image_url}` : c.image_url} alt={c.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-gray-400">—</span>
+                      <div className="relative flex flex-col items-center justify-center w-36 h-36">
+                        <label htmlFor="category-image-upload" className="flex flex-col items-center justify-center w-36 h-36 rounded-full border-4 border-primary bg-white shadow-lg cursor-pointer hover:bg-primary/10 transition group">
+                          {c.image_url ? (
+                            <img src={c.image_url.startsWith('/uploads') ? `${getApiBaseUrl()}${c.image_url}` : c.image_url} alt={c.name} className="w-full h-full object-cover rounded-full" />
+                          ) : (
+                            <span className="flex flex-col items-center justify-center text-primary group-hover:text-accent">
+                              <svg xmlns='http://www.w3.org/2000/svg' className="w-10 h-10 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5m0 0l5 5m-5-5v12" /></svg>
+                              <span className="font-bold">העלה תמונה</span>
+                            </span>
+                          )}
+                          <input id="category-image-upload" type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                        </label>
+                        {c.image_url && (
+                          <button type="button" onClick={() => { setImageFile(null); setImagePreview(""); }}
+                            className="absolute top-1 left-1 bg-white rounded-full shadow p-1 hover:bg-red-100 transition"
+                            title="הסר תצוגה מקדימה">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                          </button>
                         )}
                       </div>
                     </TableCell>
@@ -541,7 +547,7 @@ export default function AdminPanel() {
                     </TableCell>
                   </TableRow>))}
                 </TableBody></Table></div>
-                <Pagination currentPage={categoriesPage} totalItems={categories.length} onPageChange={setCategoriesPage} />
+                <Pagination currentPage={categoriesPage} totalItems={Array.isArray(categories) ? categories.length : 0} onPageChange={setCategoriesPage} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -561,7 +567,6 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId }) {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
   const [showPreview, setShowPreview] = useState(false);
-  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if(selectedCategoryId && selectedCategoryId !== 'all') {
@@ -587,7 +592,6 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId }) {
     try {
       let imageUrl = formData.image;
       if (imageFile) {
-        setUploading(true);
         const formDataImg = new FormData();
         formDataImg.append('image', imageFile);
         const res = await fetch('/api/products/upload-image', {
@@ -598,7 +602,6 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId }) {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'שגיאה בהעלאת תמונה');
         imageUrl = data.imageUrl;
-        setUploading(false);
       }
       const payload = {
         name: formData.name,
@@ -622,7 +625,6 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId }) {
       setImagePreview("");
       onProductAdded();
     } catch (error) { 
-      setUploading(false);
       console.error('שגיאה בהוספת מוצר:', error); 
       alert(error.message || 'שגיאה בהוספת מוצר');
     }
@@ -668,7 +670,7 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId }) {
             <Label htmlFor="category" className="text-lg font-bold">קטגוריה</Label>
             <Select value={formData.category_id} onValueChange={(v) => setFormData({...formData, category_id: v})}>
               <SelectTrigger className="rounded-full text-lg px-6 py-3 shadow-sm"><SelectValue placeholder="בחר קטגוריה" /></SelectTrigger>
-              <SelectContent>{categories.map(c => <SelectItem key={c._id || c.id} value={c._id || c.id}>{c.name}</SelectItem>)}</SelectContent>
+              <SelectContent>{(Array.isArray(categories) ? categories : []).map(c => <SelectItem key={c._id || c.id} value={c._id || c.id}>{c.name}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-6 items-center justify-between">
@@ -702,9 +704,18 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId }) {
   );
 }
 
+AddProductDialog.propTypes = {
+  categories: PropTypes.array.isRequired,
+  onProductAdded: PropTypes.func.isRequired,
+  selectedCategoryId: PropTypes.string,
+};
+
 function AddCategoryDialog({ onCategoryAdded }) {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({ name: "", description: "", slug: "", image_url: "", is_active: true });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
 
   function makeSlug(str) {
     return str
@@ -714,30 +725,120 @@ function AddCategoryDialog({ onCategoryAdded }) {
       .replace(/-+/g, '-');
   }
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      let imageUrl = formData.image_url;
+      if (imageFile) {
+        const formDataImg = new FormData();
+        formDataImg.append('image', imageFile);
+        const res = await fetch('/api/categories/upload-image', {
+          method: 'POST',
+          body: formDataImg,
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'שגיאה בהעלאת תמונה');
+        imageUrl = data.imageUrl;
+      }
       const slug = formData.slug ? makeSlug(formData.slug) : makeSlug(formData.name);
       await fetch("/api/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, slug })
+        body: JSON.stringify({ ...formData, slug, image_url: imageUrl })
       });
       setOpen(false);
       setFormData({ name: "", description: "", slug: "", image_url: "", is_active: true });
+      setImageFile(null);
+      setImagePreview("");
       onCategoryAdded();
     } catch (error) { console.error('שגיאה בהוספת קטגוריה:', error); }
   };
 
+  // תצוגה מקדימה של הקטגוריה
+  const renderPreview = () => (
+    <Dialog open={showPreview} onOpenChange={setShowPreview}>
+      <DialogContent className="max-w-lg" dir="rtl">
+        <DialogHeader>
+          <DialogTitle>תצוגה מקדימה</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col items-center p-6">
+          <div className="w-40 h-40 rounded-full overflow-hidden border-8 border-white shadow-lg bg-white flex items-center justify-center mb-4">
+            <img
+              src={imagePreview || formData.image_url || 'https://images.unsplash.com/photo-1508747703725-719777637510?w=300&h=300&fit=crop&q=80'}
+              alt={formData.name}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="text-xl font-bold text-primary mb-2">{formData.name || 'שם הקטגוריה'}</div>
+          <div className="text-muted text-sm mb-2">{formData.description || 'תיאור הקטגוריה'}</div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild><Button className="flex items-center gap-2"><Plus className="w-4 h-4" />הוסף קטגוריה</Button></DialogTrigger><DialogContent className="max-w-md" dir="rtl"><DialogHeader><DialogTitle className="text-right">הוספת קטגוריה חדשה</DialogTitle></DialogHeader><form onSubmit={handleSubmit} className="space-y-4 text-right">
-      <div><Label htmlFor="name">שם</Label><Input id="name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required/></div>
-      <div><Label htmlFor="description">תיאור</Label><Textarea id="description" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})}/></div>
-      <div><Label htmlFor="slug">Slug (מזהה לכתובת באנגלית)</Label><Input id="slug" value={formData.slug} onChange={(e) => setFormData({...formData, slug: e.target.value})} placeholder="נוצר אוטומטית מהשם"/></div>
-      <div><Label htmlFor="image">כתובת תמונה</Label><Input id="image" value={formData.image_url} onChange={(e) => setFormData({...formData, image_url: e.target.value})} placeholder="https://..."/></div>
-      <Button type="submit" className="w-full">הוסף קטגוריה</Button></form></DialogContent></Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="flex items-center gap-2"><Plus className="w-4 h-4" />הוסף קטגוריה</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md rounded-3xl shadow-2xl bg-gradient-to-br from-white via-slate-50 to-primary/10 backdrop-blur-xl border border-primary/20 p-10" dir="rtl">
+        <DialogHeader>
+          <DialogTitle className="text-3xl font-extrabold text-primary mb-4 tracking-tight">הוספת קטגוריה חדשה</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-6 text-right">
+          <div><Label htmlFor="name">שם</Label><Input id="name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required/></div>
+          <div><Label htmlFor="description">תיאור</Label><Textarea id="description" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})}/></div>
+          <div><Label htmlFor="slug">Slug (מזהה לכתובת באנגלית)</Label><Input id="slug" value={formData.slug} onChange={(e) => setFormData({...formData, slug: e.target.value})} placeholder="נוצר אוטומטית מהשם"/></div>
+          <div className="flex flex-col gap-4 items-center">
+            <Label className="text-lg font-bold">תמונה</Label>
+            <div className="relative flex flex-col items-center justify-center w-36 h-36">
+              <label htmlFor="category-image-upload" className="flex flex-col items-center justify-center w-36 h-36 rounded-full border-4 border-primary bg-white shadow-lg cursor-pointer hover:bg-primary/10 transition group">
+                {imagePreview ? (
+                  <img src={imagePreview} alt="תצוגה מקדימה" className="w-full h-full object-cover rounded-full" />
+                ) : (
+                  <span className="flex flex-col items-center justify-center text-primary group-hover:text-accent">
+                    <svg xmlns='http://www.w3.org/2000/svg' className="w-10 h-10 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5m0 0l5 5m-5-5v12" /></svg>
+                    <span className="font-bold">העלה תמונה</span>
+                  </span>
+                )}
+                <input id="category-image-upload" type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+              </label>
+              {imagePreview && (
+                <button type="button" onClick={() => { setImageFile(null); setImagePreview(""); }}
+                  className="absolute top-1 left-1 bg-white rounded-full shadow p-1 hover:bg-red-100 transition"
+                  title="הסר תצוגה מקדימה">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="flex gap-4 mt-4 w-full">
+            <Button type="button" variant="outline" className="rounded-full w-1/2 text-lg font-bold border-primary text-primary hover:bg-primary/10" onClick={() => setShowPreview(true)}>תצוגה מקדימה</Button>
+            <Button type="submit" className="rounded-full w-1/2 text-lg font-bold bg-gradient-to-r from-primary to-accent hover:from-accent hover:to-primary text-white shadow-lg transition-all">הוסף קטגוריה</Button>
+          </div>
+        </form>
+        {showPreview && renderPreview()}
+      </DialogContent>
+    </Dialog>
   );
 }
+
+AddCategoryDialog.propTypes = {
+  onCategoryAdded: PropTypes.func.isRequired,
+};
 
 function EditProductDialog({ product, categories, onProductUpdated }) {
   const [open, setOpen] = useState(false);
@@ -749,7 +850,6 @@ function EditProductDialog({ product, categories, onProductUpdated }) {
   });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(product.image || "");
-  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     setFormData({
@@ -779,7 +879,6 @@ function EditProductDialog({ product, categories, onProductUpdated }) {
     try {
       let imageUrl = formData.image;
       if (imageFile) {
-        setUploading(true);
         const formDataImg = new FormData();
         formDataImg.append('image', imageFile);
         const res = await fetch('/api/products/upload-image', {
@@ -790,7 +889,6 @@ function EditProductDialog({ product, categories, onProductUpdated }) {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'שגיאה בהעלאת תמונה');
         imageUrl = data.imageUrl;
-        setUploading(false);
       }
       const payload = {
         name: formData.name,
@@ -811,7 +909,6 @@ function EditProductDialog({ product, categories, onProductUpdated }) {
       setOpen(false);
       onProductUpdated();
     } catch (error) {
-      setUploading(false);
       alert(error.message || 'שגיאה בעדכון מוצר');
     }
   };
@@ -834,7 +931,7 @@ function EditProductDialog({ product, categories, onProductUpdated }) {
             <Label htmlFor="category" className="text-lg font-bold">קטגוריה</Label>
             <Select value={formData.category_id} onValueChange={(v) => setFormData({...formData, category_id: v})}>
               <SelectTrigger className="rounded-full text-lg px-6 py-3 shadow-sm"><SelectValue placeholder="בחר קטגוריה" /></SelectTrigger>
-              <SelectContent>{categories.map(c => <SelectItem key={c._id || c.id} value={c._id || c.id}>{c.name}</SelectItem>)}</SelectContent>
+              <SelectContent>{(Array.isArray(categories) ? categories : []).map(c => <SelectItem key={c._id || c.id} value={c._id || c.id}>{c.name}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-6 items-center justify-between">
@@ -866,12 +963,17 @@ function EditProductDialog({ product, categories, onProductUpdated }) {
   );
 }
 
+EditProductDialog.propTypes = {
+  product: PropTypes.object.isRequired,
+  categories: PropTypes.array.isRequired,
+  onProductUpdated: PropTypes.func.isRequired,
+};
+
 function EditCategoryDialog({ category, onCategoryUpdated }) {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({ ...category });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(category.image_url || "");
-  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     setFormData({ ...category });
@@ -904,7 +1006,6 @@ function EditCategoryDialog({ category, onCategoryUpdated }) {
     try {
       let imageUrl = formData.image_url;
       if (imageFile) {
-        setUploading(true);
         const formDataImg = new FormData();
         formDataImg.append('image', imageFile);
         const res = await fetch('/api/categories/upload-image', {
@@ -915,7 +1016,6 @@ function EditCategoryDialog({ category, onCategoryUpdated }) {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'שגיאה בהעלאת תמונה');
         imageUrl = data.imageUrl;
-        setUploading(false);
       }
       const slug = formData.slug ? makeSlug(formData.slug) : makeSlug(formData.name);
       const payload = { ...formData, slug, image_url: imageUrl };
@@ -927,7 +1027,6 @@ function EditCategoryDialog({ category, onCategoryUpdated }) {
       setOpen(false);
       onCategoryUpdated();
     } catch (error) {
-      setUploading(false);
       alert(error.message || 'שגיאה בעדכון קטגוריה');
     }
   };
@@ -958,22 +1057,33 @@ function EditCategoryDialog({ category, onCategoryUpdated }) {
             </div>
             <div className="flex flex-col gap-4 items-center">
               <Label className="text-lg font-bold">תמונה</Label>
-              <label htmlFor="edit-category-image-upload" className="flex flex-col items-center justify-center w-36 h-36 rounded-full border-4 border-primary bg-white shadow-lg cursor-pointer hover:bg-primary/10 transition group">
-                {imagePreview ? (
-                  <img src={imagePreview.startsWith('/uploads') ? `${getApiBaseUrl()}${imagePreview}` : imagePreview} alt="תצוגה מקדימה" className="w-full h-full object-cover rounded-full" />
-                ) : (
-                  <span className="flex flex-col items-center justify-center text-primary group-hover:text-accent">
-                    <svg xmlns='http://www.w3.org/2000/svg' className="w-10 h-10 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5m0 0l5 5m-5-5v12" /></svg>
-                    <span className="font-bold">העלה תמונה</span>
-                  </span>
-                )}
-                <input id="edit-category-image-upload" type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-              </label>
+              <div className="relative flex flex-col items-center justify-center w-36 h-36">
+                <label htmlFor="edit-category-image-upload" className="flex flex-col items-center justify-center w-36 h-36 rounded-full border-4 border-primary bg-white shadow-lg cursor-pointer hover:bg-primary/10 transition group">
+                  {imagePreview ? (
+                    <img src={imagePreview.startsWith('/uploads') ? `${getApiBaseUrl()}${imagePreview}` : imagePreview} alt="תצוגה מקדימה" className="w-full h-full object-cover rounded-full" />
+                  ) : (
+                    <span className="flex flex-col items-center justify-center text-primary group-hover:text-accent">
+                      <svg xmlns='http://www.w3.org/2000/svg' className="w-10 h-10 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5m0 0l5 5m-5-5v12" /></svg>
+                      <span className="font-bold">העלה תמונה</span>
+                    </span>
+                  )}
+                  <input id="edit-category-image-upload" type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                </label>
+              </div>
             </div>
           </div>
-          <Button type="submit" className="rounded-full w-full text-lg font-bold bg-gradient-to-r from-primary to-accent hover:from-accent hover:to-primary text-white shadow-lg transition-all">שמור שינויים</Button>
+          <div className="flex gap-4 mt-4 w-full">
+            <Button type="button" variant="outline" className="rounded-full w-1/2 text-lg font-bold border-primary text-primary hover:bg-primary/10" onClick={() => setShowPreview(true)}>תצוגה מקדימה</Button>
+            <Button type="submit" className="rounded-full w-1/2 text-lg font-bold bg-gradient-to-r from-primary to-accent hover:from-accent hover:to-primary text-white shadow-lg transition-all">שמור שינויים</Button>
+          </div>
         </form>
+        {showPreview && renderPreview()}
       </DialogContent>
     </Dialog>
   );
 }
+
+EditCategoryDialog.propTypes = {
+  category: PropTypes.object.isRequired,
+  onCategoryUpdated: PropTypes.func.isRequired,
+};
