@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShoppingCart, Plus, Minus, Trash2, ArrowLeft } from "lucide-react";
 import { toast, Toaster } from "sonner";
+import { useState, useEffect } from "react";
 
 export default function Cart() {
   const [cartItems, setCartItems] = useState([]);
@@ -18,20 +18,27 @@ export default function Cart() {
     setCartItems(cart);
   };
 
-  const updateQuantity = (productId, newQuantity) => {
-    if (newQuantity < 1) return;
-    
-    const updatedCart = cartItems.map(item => 
-      item.id === productId ? { ...item, quantity: newQuantity } : item
-    );
-    
+  const getItemKey = (item) => `${item.id || item.product_id}_${item.selectedWeight || item.weight || ''}`;
+
+  const updateWeight = (productId, selectedWeight, newWeight) => {
+    const updatedCart = cartItems.map(item => {
+      if (item.id === productId && (item.selectedWeight || item.weight) === selectedWeight) {
+        const baseWeight = item.base_weight || 100;
+        const basePrice = item.base_price || item.price || 0;
+        const price = ((basePrice) * (newWeight / baseWeight));
+        return { ...item, selectedWeight: newWeight, price: price };
+      }
+      return item;
+    });
     setCartItems(updatedCart);
     localStorage.setItem('cart', JSON.stringify(updatedCart));
     window.dispatchEvent(new Event('storage'));
   };
 
-  const removeItem = (productId) => {
-    const updatedCart = cartItems.filter(item => item.id !== productId);
+  const removeItem = (productId, selectedWeight) => {
+    const updatedCart = cartItems.filter(item =>
+      !(item.id === productId && (item.selectedWeight || item.weight) === selectedWeight)
+    );
     setCartItems(updatedCart);
     localStorage.setItem('cart', JSON.stringify(updatedCart));
     window.dispatchEvent(new Event('storage'));
@@ -117,59 +124,67 @@ export default function Cart() {
 
         {/* Cart Items */}
         <div className="lg:col-span-2 space-y-4">
-          {cartItems.map((item) => (
-            <Card key={item.id} className="border-2 border-border shadow-xl bg-surface/90 backdrop-blur-md rounded-2xl">
-              <CardContent className="p-6">
-                <div className="flex flex-col sm:flex-row-reverse items-center gap-4">
-                  <img 
-                    src={item.image_url || `https://images.unsplash.com/photo-1508747703725-719777637510?w=100&h=100&fit=crop&q=80`}
-                    alt={item.name}
-                    className="w-24 h-24 object-cover rounded-full border-4 border-surface shadow-lg"
-                  />
-                  <div className="flex-1 text-center sm:text-right">
-                    <h3 className="text-lg font-bold text-primary">{item.name}</h3>
-                    <p className="text-muted text-sm">{item.weight || "איכות פרימיום"}</p>
-                    <p className="text-xl font-bold text-success mt-2">
-                      ₪{item.price?.toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                     <Button 
-                      size="icon" 
-                      variant="ghost"
-                      onClick={() => removeItem(item.id)}
-                      className="text-error hover:text-error hover:bg-error/10 rounded-full"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                     <Button 
-                      size="icon" 
-                      variant="outline"
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="rounded-full border-primary text-primary hover:bg-primary/10"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                    <span className="w-8 text-center font-medium text-lg">{item.quantity}</span>
-                    <Button 
-                      size="icon" 
-                      variant="outline"
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      disabled={item.quantity <= 1}
-                      className="rounded-full border-primary text-primary hover:bg-primary/10"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <div className="text-left w-24">
-                    <p className="text-lg font-bold text-text">
-                      ₪{(item.price * item.quantity).toFixed(2)}
-                    </p>
+          {cartItems.map((item) => {
+            const minWeight = item.base_weight || 100;
+            const step = item.weight_step || 50;
+            return (
+              <div
+                key={getItemKey(item)}
+                className="flex items-center justify-between gap-6 p-6 pt-12 bg-white rounded-3xl shadow-lg border border-gray-200 relative"
+              >
+                {/* כפתור מחיקה בפינה העליונה-שמאלית */}
+                <button
+                  onClick={() => removeItem(item.id, item.selectedWeight || item.weight)}
+                  className="absolute top-4 left-4 z-10 p-2 rounded-full bg-white shadow hover:bg-red-50 transition"
+                  aria-label="הסר פריט"
+                >
+                  <Trash2 className="w-6 h-6 text-red-400" />
+                </button>
+                {/* עמודה: תמונה + שם מוצר */}
+                <div className="flex flex-col items-center w-32 flex-shrink-0">
+                  <span className="text-lg font-bold text-primary mb-2">{item.name}</span>
+                  <div className="w-24 h-24 rounded-full overflow-hidden shadow">
+                    <img
+                      src={item.image_url || `https://images.unsplash.com/photo-1508747703725-719777637510?w=100&h=100&fit=crop&q=80`}
+                      alt={item.name}
+                      className="object-cover w-full h-full"
+                    />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+                {/* עמודה: שינוי משקל */}
+                <div className="flex flex-col items-center min-w-[180px]">
+                  <div className="flex items-center gap-4">
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => updateWeight(item.id, item.selectedWeight || item.weight, Math.max(minWeight, (item.selectedWeight || item.weight) - step))}
+                      disabled={(item.selectedWeight || item.weight) <= minWeight}
+                      className="w-14 h-14 rounded-full border-2 border-primary text-primary text-2xl flex items-center justify-center hover:bg-primary hover:text-white transition"
+                      aria-label="הפחת משקל"
+                    >
+                      <Minus className="w-6 h-6" />
+                    </Button>
+                    <span className="text-2xl font-extrabold text-gray-900 mx-2">{item.selectedWeight ? item.selectedWeight : item.weight}</span>
+                    <span className="text-lg font-bold text-gray-500">גרם</span>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => updateWeight(item.id, item.selectedWeight || item.weight, (item.selectedWeight || item.weight) + step)}
+                      className="w-14 h-14 rounded-full border-2 border-primary text-primary text-2xl flex items-center justify-center hover:bg-primary hover:text-white transition"
+                      aria-label="הוסף משקל"
+                    >
+                      <Plus className="w-6 h-6" />
+                    </Button>
+                  </div>
+                </div>
+                {/* עמודה: מחיר כולל */}
+                <div className="flex flex-col items-end min-w-[110px]">
+                  <span>מחיר</span>
+                  <span className="text-xl font-extrabold text-primary">₪{item.price?.toFixed(2)}</span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

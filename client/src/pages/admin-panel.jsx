@@ -495,7 +495,7 @@ export default function AdminPanel() {
 
 function AddProductDialog({ categories, onProductAdded, selectedCategoryId }) {
   const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState({ name: "", description: "", price: "", category_id: "", image: "", weight: "", stock_quantity: "", is_active: true });
+  const [formData, setFormData] = useState({ name: "", description: "", price: "", category_id: "", image: "", weight: "", stock_quantity: "", is_active: true, base_weight: "", base_price: "", weight_step: "" });
   
   useEffect(() => {
     if(selectedCategoryId && selectedCategoryId !== 'all') {
@@ -514,7 +514,10 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId }) {
         category_id: formData.category_id,
         weight: formData.weight,
         stock_quantity: Number(formData.stock_quantity),
-        is_active: formData.is_active
+        is_active: formData.is_active,
+        base_weight: Number(formData.base_weight),
+        base_price: Number(formData.base_price),
+        weight_step: Number(formData.weight_step)
       };
       await fetch(`/api/products`, {
         method: "POST",
@@ -522,7 +525,7 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId }) {
         body: JSON.stringify(payload)
       });
       setOpen(false);
-      setFormData({ name: "", description: "", price: "", category_id: "", image: "", weight: "", stock_quantity: "", is_active: true });
+      setFormData({ name: "", description: "", price: "", category_id: "", image: "", weight: "", stock_quantity: "", is_active: true, base_weight: "", base_price: "", weight_step: "" });
       onProductAdded();
     } catch (error) { console.error('שגיאה בהוספת מוצר:', error); }
   };
@@ -536,6 +539,9 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId }) {
       <div><Label htmlFor="weight">משקל/גודל</Label><Input id="weight" value={formData.weight} onChange={(e) => setFormData({...formData, weight: e.target.value})} placeholder='לדוגמה: 500ג, 1ק"ג'/></div>
       <div><Label htmlFor="stock">כמות במלאי</Label><Input id="stock" type="number" value={formData.stock_quantity} onChange={(e) => setFormData({...formData, stock_quantity: e.target.value})} required/></div>
       <div><Label htmlFor="image">כתובת תמונה</Label><Input id="image" value={formData.image} onChange={(e) => setFormData({...formData, image: e.target.value})} placeholder="https://..."/></div>
+      <div><Label htmlFor="base_weight">משקל בסיס (גרם)</Label><Input id="base_weight" type="number" value={formData.base_weight} onChange={(e) => setFormData({...formData, base_weight: e.target.value})} required/></div>
+      <div><Label htmlFor="base_price">מחיר למשקל בסיס</Label><Input id="base_price" type="number" step="0.01" value={formData.base_price} onChange={(e) => setFormData({...formData, base_price: e.target.value})} required/></div>
+      <div><Label htmlFor="weight_step">קפיצת משקל (גרם)</Label><Input id="weight_step" type="number" value={formData.weight_step} onChange={(e) => setFormData({...formData, weight_step: e.target.value})} required/></div>
       <Button type="submit" className="w-full">הוסף מוצר</Button></form></DialogContent></Dialog>
   );
 }
