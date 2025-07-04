@@ -8,6 +8,7 @@ const rateLimit = require('express-rate-limit');
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', 1);
 
 // Helmet for security headers
 app.use(helmet());
@@ -89,7 +90,6 @@ mongoose.connect(process.env.MONGO_URI)
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
     });
-    app.set('trust proxy', 1);
     app.listen(process.env.PORT || 5000, () => {
       console.log('Server running on port', process.env.PORT || 5000);
     });
