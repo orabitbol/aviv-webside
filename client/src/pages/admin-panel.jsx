@@ -57,6 +57,14 @@ Pagination.propTypes = {
   onPageChange: PropTypes.func.isRequired,
 };
 
+const ModernLoader = ({ text = "טוען נתונים..." }) => (
+  <div className="flex flex-col items-center justify-center py-12 animate-fade-in">
+    <div className="w-12 h-12 mb-4 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+    <span className="text-primary text-lg font-bold mb-1">{text}</span>
+    <span className="text-muted text-xs">אנא המתן</span>
+  </div>
+);
+
 export default function AdminPanel() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -485,7 +493,11 @@ export default function AdminPanel() {
                     </TableHeader>
                     <TableBody>
                       {ordersLoading ? (
-                        <TableRow><TableCell colSpan={9} className="text-center">טוען...</TableCell></TableRow>
+                        <TableRow>
+                          <TableCell colSpan={9} className="text-center">
+                            <ModernLoader text="טוען הזמנות..." />
+                          </TableCell>
+                        </TableRow>
                       ) : !Array.isArray(filteredOrders) || filteredOrders.length === 0 ? (
                         <TableRow><TableCell colSpan={9} className="text-center">אין הזמנות להצגה</TableCell></TableRow>
                       ) : getPaginatedData(filteredOrders, ordersPage).map((order, idx) => (
