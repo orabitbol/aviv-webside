@@ -11,6 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { CreditCard, MapPin, Check, ArrowRight, ArrowLeft } from "lucide-react";
 import { toast, Toaster } from "sonner";
+import { FaCreditCard } from 'react-icons/fa';
+import { SiBit } from 'react-icons/si';
+import { SiPaybox } from 'react-icons/si';
 
 const SOUTHERN_CITIES = [
   "באר שבע", "אילת", "ערד", "דימונה", "נתיבות", "אופקים", "שדרות", "אשקלון", "אשדוד", "קריית גת", "קריית מלאכי"
@@ -103,7 +106,6 @@ export default function Checkout() {
         })
       });
       const orderResult = await orderRes.json();
-      const order = orderResult.order;
       localStorage.removeItem('cart');
       window.dispatchEvent(new Event('storage'));
       toast.success('ההזמנה בוצעה בהצלחה!');
@@ -152,7 +154,7 @@ export default function Checkout() {
             <div className="space-y-4">
               <h2 className="text-xl font-bold">פרטי משלוח</h2>
               <div className="grid md:grid-cols-2 gap-4">
-                <div><Label htmlFor="customer_email">דוא"ל *</Label><Input id="customer_email" type="email" value={formData.customer_email} onChange={(e) => handleInputChange('customer_email', e.target.value)} required /></div>
+                <div><Label htmlFor="customer_email">דוא&quot;ל *</Label><Input id="customer_email" type="email" value={formData.customer_email} onChange={(e) => handleInputChange('customer_email', e.target.value)} required /></div>
                 <div><Label htmlFor="customer_name">שם מלא *</Label><Input id="customer_name" value={formData.customer_name} onChange={(e) => handleInputChange('customer_name', e.target.value)} required /></div>
               </div>
               <div><Label htmlFor="customer_phone">טלפון *</Label><Input id="customer_phone" type="tel" value={formData.customer_phone} onChange={(e) => handleInputChange('customer_phone', e.target.value)} required /></div>
@@ -171,9 +173,42 @@ export default function Checkout() {
           {step === 2 && (
             <div className="space-y-4">
               <h2 className="text-xl font-bold">אמצעי תשלום</h2>
-              <div>
-                <Label htmlFor="payment_method">אמצעי תשלום *</Label>
-                <Select value={formData.payment_method} onValueChange={(value) => handleInputChange('payment_method', value)}><SelectTrigger><SelectValue placeholder="בחר אמצעי תשלום" /></SelectTrigger><SelectContent><SelectItem value="Credit Card">כרטיס אשראי</SelectItem><SelectItem value="PayPal">פייפאל</SelectItem><SelectItem value="Cash on Delivery">מזומן במשלוח</SelectItem></SelectContent></Select>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-6">
+                {[
+                  {
+                    value: 'Credit Card',
+                    label: 'כרטיס אשראי',
+                    icon: <FaCreditCard className="w-10 h-10 text-primary mx-auto" />,
+                    desc: 'תשלום מאובטח בכרטיס אשראי',
+                  },
+                  {
+                    value: 'Bit',
+                    label: 'Bit',
+                    icon: <SiBit className="w-10 h-10 text-blue-500 mx-auto" />,
+                    desc: 'תשלום מהיר דרך אפליקציית Bit',
+                  },
+                  {
+                    value: 'PayBox',
+                    label: 'PayBox',
+                    icon: <SiPaybox className="w-10 h-10 text-green-500 mx-auto" />,
+                    desc: 'תשלום קל דרך PayBox',
+                  },
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => handleInputChange('payment_method', opt.value)}
+                    className={`group w-full rounded-2xl border-2 p-6 flex flex-col items-center shadow-lg transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50
+                      ${formData.payment_method === opt.value ? 'border-primary bg-primary/10 scale-105 shadow-2xl' : 'border-border bg-white hover:bg-primary/5'}`}
+                  >
+                    {opt.icon}
+                    <div className="mt-4 text-lg font-bold text-primary group-hover:text-accent">{opt.label}</div>
+                    <div className="text-sm text-muted mt-2">{opt.desc}</div>
+                    {formData.payment_method === opt.value && (
+                      <div className="mt-4 text-green-600 font-bold flex items-center gap-2"><Check className="w-5 h-5" />נבחר</div>
+                    )}
+                  </button>
+                ))}
               </div>
               <div><Label htmlFor="notes">הערות להזמנה (אופציונלי)</Label><Textarea id="notes" value={formData.notes} onChange={(e) => handleInputChange('notes', e.target.value)} /></div>
             </div>
