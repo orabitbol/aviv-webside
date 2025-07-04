@@ -411,14 +411,16 @@ export default function AdminPanel() {
                                       </thead>
                                       <tbody>
                                         {orderItemsModal.items.map((item) => {
-                                          const product = (Array.isArray(products) ? products : []).find(p => p._id === item.product_id);
+                                          const product = (Array.isArray(products) ? products : []).find(
+                                            p => String(p._id) === String(item.product_id)
+                                          );
                                           return (
                                             <tr key={item._id || item.id} className="hover:bg-accent/10 transition">
                                               <td className="px-4 py-2 text-text flex items-center gap-2">
                                                 {product && product.image_url && (
                                                   <img src={product.image_url} alt={product.name} className="w-10 h-10 rounded-full object-cover border border-border shadow" />
                                                 )}
-                                                {product ? product.name : '—'}
+                                                {product ? product.name : item.product_name || '—'}
                                               </td>
                                               <td className="px-4 py-2 text-text">{item.quantity}</td>
                                               <td className="px-4 py-2 text-text">{item.weight} גרם</td>

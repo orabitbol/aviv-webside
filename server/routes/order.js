@@ -79,7 +79,8 @@ router.post('/', [
             order_id: order._id,
             weight,
             unit_price,
-            price
+            price,
+            product_name: product.name
           });
           await orderItem.save();
           return orderItem;

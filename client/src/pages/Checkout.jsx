@@ -103,7 +103,12 @@ export default function Checkout() {
       localStorage.removeItem('cart');
       window.dispatchEvent(new Event('storage'));
       toast.success('ההזמנה בוצעה בהצלחה!');
-      navigate(createPageUrl(`OrderConfirmation?order=${order.order_number}`));
+      navigate(createPageUrl("OrderConfirmation"), {
+        state: {
+          order: orderResult.order,
+          items: orderResult.items
+        }
+      });
     } catch (error) {
       console.error('שגיאה בעיבוד ההזמנה:', error);
       toast.error('שגיאה בעיבוד ההזמנה. אנא נסה שוב.');

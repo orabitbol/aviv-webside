@@ -1,62 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { getApiBaseUrl } from "@/lib/utils";
-// import { OrderItem } from "@/api/entities"; // נמחק
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Package, MapPin, CreditCard, ArrowLeft, Mail, Phone } from "lucide-react";
+import { CheckCircle, Package, MapPin, ArrowLeft } from "lucide-react";
 
 export default function OrderConfirmation() {
-  const [order, setOrder] = useState(null);
-  const [orderItems, setOrderItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const orderNumber = new URLSearchParams(window.location.search).get('order');
-
-  useEffect(() => {
-    const fetchOrder = async () => {
-      setIsLoading(true);
-      try {
-        const res = await fetch(`${getApiBaseUrl()}/api/orders`);
-        const data = await res.json();
-        const found = (data.data || []).find(o => String(o.order_number) === String(orderNumber));
-        setOrder(found || null);
-      } catch (error) {
-        setOrder(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    if (orderNumber) fetchOrder();
-  }, [orderNumber]);
-
-  useEffect(() => {
-    const fetchOrderItems = async () => {
-      if (!order) return;
-      setIsLoading(true);
-      try {
-        const res = await fetch(`${getApiBaseUrl()}/api/order-items/order/${order._id}`);
-        const data = await res.json();
-        setOrderItems(data);
-      } catch (error) {
-        setOrderItems([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchOrderItems();
-  }, [order]);
-
-  if (isLoading) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted">טוען פרטי הזמנה...</p>
-        </div>
-      </div>
-    );
-  }
+  const location = useLocation();
+  const { order, items } = location.state || {};
 
   if (!order) {
     return (
@@ -165,7 +116,7 @@ export default function OrderConfirmation() {
                   </tr>
                 </thead>
                 <tbody>
-                  {orderItems.map((item) => (
+                  {Array.isArray(items) && items.map((item) => (
                     <tr key={item._id || item.id} className="hover:bg-accent/10 transition">
                       <td className="px-4 py-2 text-text">{item.product_id?.name || item.product_name || '—'}</td>
                       <td className="px-4 py-2 text-text">{item.quantity}</td>
