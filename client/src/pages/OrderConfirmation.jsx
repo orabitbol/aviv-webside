@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { createPageUrl, getApiBaseUrl } from "@/utils";
+import { createPageUrl } from "@/utils";
+import { getApiBaseUrl } from "@/lib/utils";
 // import { OrderItem } from "@/api/entities"; // נמחק
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
