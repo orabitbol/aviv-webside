@@ -24,6 +24,11 @@ export default function OrderConfirmation() {
     );
   }
 
+  // חישוב ערכים בטוחים לתצוגה
+  const shipping = typeof order.shipping === 'number' ? order.shipping : 5.99;
+  const subtotal = order.total && shipping ? (order.total - shipping) : (Array.isArray(items) ? items.reduce((sum, item) => sum + (item.total_price || 0), 0) : 0);
+  const total = order.total || (subtotal + shipping);
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-right">
       {/* Success Header */}
@@ -133,15 +138,15 @@ export default function OrderConfirmation() {
                     <>
                       <tr>
                         <td colSpan={4} className="text-left font-bold">סה"כ ביניים (מוצרים):</td>
-                        <td className="text-success font-bold">₪{order.total && order.shipping ? (order.total - order.shipping).toFixed(2) : ''}</td>
+                        <td className="text-success font-bold">₪{subtotal.toFixed(2)}</td>
                       </tr>
                       <tr>
                         <td colSpan={4} className="text-left font-bold">משלוח:</td>
-                        <td className="text-primary font-bold">₪{order.shipping?.toFixed(2) || '0.00'}</td>
+                        <td className="text-primary font-bold">₪{shipping.toFixed(2)}</td>
                       </tr>
                       <tr>
                         <td colSpan={4} className="text-left font-bold text-lg">סה"כ לתשלום (כולל משלוח):</td>
-                        <td className="text-success font-bold text-lg">₪{order.total?.toFixed(2)}</td>
+                        <td className="text-success font-bold text-lg">₪{total.toFixed(2)}</td>
                       </tr>
                     </>
                   )}
