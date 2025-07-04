@@ -4,6 +4,7 @@ const { requireAdmin } = require('../auth/middleware');
 const router = express.Router();
 const OrderItem = require('../models/OrderItem');
 const Product = require('../models/Product');
+const { body, validationResult } = require('express-validator');
 
 // Get all orders (with pagination)
 router.get('/', requireAdmin, async (req, res) => {
@@ -41,7 +42,18 @@ router.get('/:id', requireAdmin, async (req, res) => {
 });
 
 // Create new order (public)
-router.post('/', async (req, res) => {
+router.post('/', [
+  body('customerName').isString().trim().notEmpty().withMessage('Customer name is required'),
+  body('customerEmail').isEmail().withMessage('Email is invalid').normalizeEmail(),
+  body('address').isString().trim().notEmpty().withMessage('Address is required'),
+  body('phone').isString().trim().notEmpty().withMessage('Phone is required'),
+  body('total').isNumeric().withMessage('Total must be a number'),
+  body('items').isArray({ min: 1 }).withMessage('Items must be an array with at least one item'),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
   try {
     const { items, ...orderData } = req.body;
     // הפקת order_number רץ
@@ -86,7 +98,18 @@ router.post('/', async (req, res) => {
 });
 
 // Update order (admin)
-router.put('/:id', requireAdmin, async (req, res) => {
+router.put('/:id', [
+  body('customerName').optional().isString().trim().notEmpty(),
+  body('customerEmail').optional().isEmail().normalizeEmail(),
+  body('address').optional().isString().trim().notEmpty(),
+  body('phone').optional().isString().trim().notEmpty(),
+  body('total').optional().isNumeric(),
+  body('status').optional().isString().trim(),
+], requireAdmin, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
   try {
     const order = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!order) return res.status(404).json({ error: 'Order not found' });

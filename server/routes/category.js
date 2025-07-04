@@ -4,6 +4,7 @@ const { requireAdmin } = require('../auth/middleware');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
+const { body, validationResult } = require('express-validator');
 
 // הגדרת multer לשמירת קבצים בתיקיית uploads
 const storage = multer.diskStorage({
@@ -15,7 +16,17 @@ const storage = multer.diskStorage({
     cb(null, uniqueSuffix + '-' + file.originalname);
   }
 });
-const upload = multer({ storage: storage });
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.mimetype)) {
+      return cb(new Error('Only image files are allowed (jpeg, png, gif, webp)'));
+    }
+    cb(null, true);
+  }
+});
 
 // Get all categories
 router.get('/', async (req, res) => {
@@ -43,7 +54,16 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new category
-router.post('/', requireAdmin, async (req, res) => {
+router.post('/', [
+  body('name').isString().trim().notEmpty().withMessage('Name is required'),
+  body('slug').isString().trim().notEmpty().withMessage('Slug is required'),
+  body('description').optional().trim().escape(),
+  body('image_url').optional().trim(),
+], requireAdmin, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
   try {
     const category = new Category(req.body);
     await category.save();
@@ -54,7 +74,16 @@ router.post('/', requireAdmin, async (req, res) => {
 });
 
 // Update category
-router.put('/:id', requireAdmin, async (req, res) => {
+router.put('/:id', [
+  body('name').optional().isString().trim().notEmpty().withMessage('Name is required'),
+  body('slug').optional().isString().trim().notEmpty().withMessage('Slug is required'),
+  body('description').optional().trim().escape(),
+  body('image_url').optional().trim(),
+], requireAdmin, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
   try {
     const category = await Category.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!category) return res.status(404).json({ error: 'Category not found' });
@@ -76,12 +105,17 @@ router.delete('/:id', requireAdmin, async (req, res) => {
 });
 
 // העלאת תמונה לקטגוריה
-router.post('/upload-image', requireAdmin, upload.single('image'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
-  }
-  const imageUrl = `/uploads/${req.file.filename}`;
-  res.json({ imageUrl });
+router.post('/upload-image', requireAdmin, (req, res, next) => {
+  upload.single('image')(req, res, function (err) {
+    if (err) {
+      return res.status(400).json({ error: err.message });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    const imageUrl = `/uploads/${req.file.filename}`;
+    res.json({ imageUrl });
+  });
 });
 
 module.exports = router; 

@@ -3,9 +3,10 @@ const OrderItem = require('../models/OrderItem');
 const { requireAdmin } = require('../auth/middleware');
 const mongoose = require('mongoose');
 const router = express.Router();
+const { body, validationResult } = require('express-validator');
 
 // Get all order items
-router.get('/', async (req, res) => {
+router.get('/', requireAdmin, async (req, res) => {
   try {
     const items = await OrderItem.find();
     res.json(items);
@@ -43,7 +44,17 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new order item
-router.post('/', requireAdmin, async (req, res) => {
+router.post('/', [
+  body('product_id').isString().notEmpty().withMessage('Product ID is required'),
+  body('quantity').isNumeric().withMessage('Quantity must be a number'),
+  body('price').isNumeric().withMessage('Price must be a number'),
+  body('weight').isNumeric().withMessage('Weight must be a number'),
+  body('unit_price').isNumeric().withMessage('Unit price must be a number'),
+], requireAdmin, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
   try {
     const { weight, unit_price } = req.body;
     if (typeof weight !== 'number' || typeof unit_price !== 'number') {
@@ -58,7 +69,17 @@ router.post('/', requireAdmin, async (req, res) => {
 });
 
 // Update order item
-router.put('/:id', requireAdmin, async (req, res) => {
+router.put('/:id', [
+  body('product_id').optional().isString().notEmpty(),
+  body('quantity').optional().isNumeric(),
+  body('price').optional().isNumeric(),
+  body('weight').optional().isNumeric(),
+  body('unit_price').optional().isNumeric(),
+], requireAdmin, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
   try {
     const { weight, unit_price } = req.body;
     if (typeof weight !== 'number' || typeof unit_price !== 'number') {

@@ -3,25 +3,76 @@ const mongoose = require('mongoose');
 const session = require('cookie-session');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 dotenv.config();
 
 const app = express();
 
+// Helmet for security headers
+app.use(helmet());
+
+// Rate limiting (100 requests per 15 minutes per IP)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(limiter);
+
+// CORS - allow only your domain and localhost (adjust as needed)
+const allowedOrigins = [
+  process.env.FRONTEND_URL_DEV,
+  process.env.FRONTEND_URL_PROD
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
-  credentials: true
+  origin: function(origin, callback) {
+    // allow requests with no origin (like mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
 }));
-app.use(express.json());
+
+app.use(express.json({
+  verify: (req, res, buf) => {
+    try {
+      JSON.parse(buf);
+    } catch (e) {
+      res.status(400).json({ error: 'Invalid JSON' });
+      throw Error('Invalid JSON');
+    }
+  }
+}));
 app.use(session({
   name: 'session',
   secret: process.env.SESSION_SECRET || 'secret',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false, httpOnly: true, maxAge: 1000 * 60 * 60 * 24 }
+  // Secure session cookie settings
+  cookie: {
+    secure: process.env.NODE_ENV === 'production', // true only in production (HTTPS)
+    httpOnly: true,
+    sameSite: 'strict',
+    maxAge: 1000 * 60 * 60 * 24
+  }
 }));
 
-// הגשת קבצים סטטיים מתיקיית uploads
-app.use('/uploads', express.static(__dirname + '/uploads'));
+// הגשת קבצים סטטיים מתיקיית uploads (רק תמונות)
+app.use('/uploads', (req, res, next) => {
+  const allowedExt = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+  const path = require('path');
+  const ext = path.extname(req.path).toLowerCase();
+  if (!allowedExt.includes(ext)) {
+    return res.status(403).send('Access denied');
+  }
+  next();
+}, express.static(__dirname + '/uploads'));
 
 // Routes
 app.use('/api/categories', require('./routes/category'));
