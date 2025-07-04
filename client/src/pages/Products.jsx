@@ -10,6 +10,10 @@ import { getApiBaseUrl } from "@/lib/utils";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
   const [categories, setCategories] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -18,24 +22,19 @@ export default function Products() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadData();
+    loadData(currentPage);
     checkUrlCategory();
-  }, []);
+  }, [currentPage, searchTerm, selectedCategory, sortBy]);
 
-  useEffect(() => {
-    filterProducts();
-  }, [products, searchTerm, selectedCategory, sortBy]);
-
-  const loadData = async () => {
+  const loadData = async (page = 1) => {
     try {
-      const [productsRes, categoriesRes] = await Promise.all([
-        fetch("/api/products"),
-        fetch("/api/categories")
-      ]);
-      const productsData = await productsRes.json();
-      const categoriesData = await categoriesRes.json();
-      setProducts(productsData);
-      setCategories(categoriesData);
+      let url = `/api/products?page=${page}&limit=${ITEMS_PER_PAGE}`;
+      // אפשר להוסיף כאן פרמטרים לסינון/חיפוש בעתיד
+      const res = await fetch(url);
+      const data = await res.json();
+      setProducts(data.data || []);
+      setTotalProducts(data.total || 0);
+      setTotalPages(data.pages || 1);
     } catch (error) {
       console.error('שגיאה בטעינת נתונים:', error);
     } finally {
@@ -49,30 +48,6 @@ export default function Products() {
     if (categorySlug) {
       setSelectedCategory(categorySlug);
     }
-  };
-
-  const filterProducts = () => {
-    let filtered = [...products];
-    if (searchTerm) {
-      filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    if (selectedCategory !== "all") {
-      filtered = filtered.filter(product => {
-        const cat = categories.find(c => c.slug === selectedCategory);
-        return cat && product.category_id === cat._id;
-      });
-    }
-    if (sortBy === "name") {
-      filtered.sort((a, b) => a.name.localeCompare(b.name));
-    } else if (sortBy === "price_low") {
-      filtered.sort((a, b) => a.price - b.price);
-    } else if (sortBy === "price_high") {
-      filtered.sort((a, b) => b.price - a.price);
-    }
-    setFilteredProducts(filtered);
   };
 
   const addToCart = (product) => {
@@ -232,12 +207,37 @@ export default function Products() {
       </div>
 
       {/* Products Grid */}
-      {filteredProducts.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-12">
-          {filteredProducts.map((product) => (
-            <ProductCard key={product._id} product={product} addToCart={addToCart} />
-          ))}
-        </div>
+      {products.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-12">
+            {products.map((product) => (
+              <ProductCard key={product._id} product={product} addToCart={addToCart} />
+            ))}
+          </div>
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-4 mt-8">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                <span className="sr-only">הקודם</span>
+                &lt;
+              </Button>
+              <span className="text-sm">עמוד {currentPage} מתוך {totalPages}</span>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+              >
+                <span className="sr-only">הבא</span>
+                &gt;
+              </Button>
+            </div>
+          )}
+        </>
       ) : (
         <div className="text-center py-12">
           <p className="text-muted text-lg">לא נמצאו מוצרים תואמים.</p>

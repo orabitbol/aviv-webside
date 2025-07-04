@@ -8,17 +8,24 @@ import { ArrowLeft, Star, Leaf, Shield, Truck } from "lucide-react";
 
 export default function Homepage() {
   const [categories, setCategories] = useState([]);
+  const [totalCategories, setTotalCategories] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
+  const ITEMS_PER_PAGE = 20;
 
-  const loadCategories = async () => {
+  useEffect(() => {
+    loadCategories(currentPage);
+  }, [currentPage]);
+
+  const loadCategories = async (page = 1) => {
     try {
-      const res = await fetch("/api/categories");
+      const res = await fetch(`/api/categories?page=${page}&limit=${ITEMS_PER_PAGE}`);
       const data = await res.json();
-      setCategories(data.filter(c => c.is_active !== false));
+      setCategories(data.data || []);
+      setTotalCategories(data.total || 0);
+      setTotalPages(data.pages || 1);
     } catch (error) {
       console.error('שגיאה בטעינת קטגוריות:', error);
     } finally {
@@ -151,6 +158,29 @@ export default function Homepage() {
                 </Link>
               );
             })}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-4 mt-8">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <span className="sr-only">הקודם</span>
+                  &lt;
+                </Button>
+                <span className="text-sm">עמוד {currentPage} מתוך {totalPages}</span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  <span className="sr-only">הבא</span>
+                  &gt;
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center py-12">

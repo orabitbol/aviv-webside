@@ -20,8 +20,12 @@ const upload = multer({ storage: storage });
 // Get all categories
 router.get('/', async (req, res) => {
   try {
-    const categories = await Category.find();
-    res.json(categories);
+    const page = parseInt(req.query.page) > 0 ? parseInt(req.query.page) : 1;
+    const limit = parseInt(req.query.limit) > 0 ? parseInt(req.query.limit) : 20;
+    const skip = (page - 1) * limit;
+    const total = await Category.countDocuments();
+    const categories = await Category.find().skip(skip).limit(limit);
+    res.json({ data: categories, total, page, pages: Math.ceil(total / limit) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

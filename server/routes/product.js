@@ -20,8 +20,12 @@ const upload = multer({ storage: storage });
 // Get all products
 router.get('/', async (req, res) => {
   try {
-    const products = await Product.find();
-    res.json(products);
+    const page = parseInt(req.query.page) > 0 ? parseInt(req.query.page) : 1;
+    const limit = parseInt(req.query.limit) > 0 ? parseInt(req.query.limit) : 20;
+    const skip = (page - 1) * limit;
+    const total = await Product.countDocuments();
+    const products = await Product.find().skip(skip).limit(limit);
+    res.json({ data: products, total, page, pages: Math.ceil(total / limit) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
