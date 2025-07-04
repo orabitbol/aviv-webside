@@ -53,6 +53,19 @@ export default function Cart() {
     return cartItems.reduce((total, item) => total + item.quantity, 0);
   };
 
+  const updateQuantity = (productId, selectedWeight, newQuantity) => {
+    let updatedCart = cartItems.map(item => {
+      if (item.id === productId && (item.selectedWeight || item.weight) === selectedWeight) {
+        return { ...item, quantity: newQuantity };
+      }
+      return item;
+    });
+    updatedCart = updatedCart.filter(item => item.quantity > 0);
+    setCartItems(updatedCart);
+    localStorage.setItem('cart', JSON.stringify(updatedCart));
+    window.dispatchEvent(new Event('storage'));
+  };
+
   if (cartItems.length === 0) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -151,7 +164,32 @@ export default function Cart() {
                     />
                   </div>
                 </div>
-                {/* עמודה: שינוי משקל */}
+                {/* עמודה: שינוי כמות */}
+                <div className="flex flex-col items-center min-w-[120px]">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => updateQuantity(item.id, item.selectedWeight || item.weight, item.quantity - 1)}
+                      disabled={item.quantity <= 1}
+                      className="w-10 h-10 rounded-full border-2 border-primary text-primary text-xl flex items-center justify-center hover:bg-primary hover:text-white transition"
+                      aria-label='הפחת כמות'
+                    >
+                      <Minus className="w-5 h-5" />
+                    </Button>
+                    <span className="text-xl font-bold mx-2">{item.quantity}</span>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => updateQuantity(item.id, item.selectedWeight || item.weight, item.quantity + 1)}
+                      className="w-10 h-10 rounded-full border-2 border-primary text-primary text-xl flex items-center justify-center hover:bg-primary hover:text-white transition"
+                      aria-label='הוסף כמות'
+                    >
+                      <Plus className="w-5 h-5" />
+                    </Button>
+                  </div>
+                </div>
+                {/* עמודה: עמודה: שינוי משקל */}
                 <div className="flex flex-col items-center min-w-[180px]">
                   <div className="flex items-center gap-4">
                     <Button

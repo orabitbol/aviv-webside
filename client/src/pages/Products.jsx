@@ -49,17 +49,17 @@ export default function Products() {
   const addToCart = (product) => {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
     const productToCart = { ...product, product_id: product._id, id: product._id };
-    const existingItem = cart.find(item => item.product_id === product._id || item.id === product._id);
-    
+    const existingItem = cart.find(item =>
+      (item.product_id === product._id || item.id === product._id) &&
+      (item.selectedWeight === product.selectedWeight)
+    );
     if (existingItem) {
       existingItem.quantity += 1;
     } else {
       cart.push({ ...productToCart, quantity: 1 });
     }
-    
     localStorage.setItem('cart', JSON.stringify(cart));
     toast.success(`${product.name} נוסף לסל!`);
-    
     window.dispatchEvent(new Event('storage'));
   };
 
