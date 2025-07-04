@@ -96,44 +96,63 @@ export default function Products() {
     const price = ((product.base_price || 0) * (selectedWeight / (product.base_weight || 100))).toFixed(2);
     const minWeight = product.base_weight || 100;
     const step = product.weight_step || 50;
+    const isOutOfStock = product.is_active === false;
     return (
-      <div className="flex flex-col items-center p-6 bg-transparent">
-        <div className="w-40 h-40 rounded-full overflow-hidden border-8 border-white shadow-lg bg-white flex items-center justify-center mb-4">
+      <div className={`flex flex-col items-center p-6 transition-all duration-300 ${isOutOfStock ? 'opacity-60 grayscale' : ''} rounded-3xl`}
+        style={isOutOfStock ? { pointerEvents: 'none' } : {}}>
+        <div className="w-40 h-40 rounded-full overflow-hidden border-8 border-white shadow-lg bg-white flex items-center justify-center mb-4 relative">
           <img
             src={product.image_url || 'https://images.unsplash.com/photo-1508747703725-719777637510?w=300&h=300&fit=crop&q=80'}
             alt={product.name}
-            className="w-full h-full object-cover"
+            className={`w-full h-full object-cover ${isOutOfStock ? 'grayscale' : ''}`}
           />
+          {isOutOfStock && (
+            <span className="absolute top-2 left-2 animate-pulse">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" /></svg>
+            </span>
+          )}
         </div>
         <div className="text-xl font-bold text-primary mb-2">{product.name}</div>
         <div className="text-muted text-sm mb-2">{product.description}</div>
-        <div className="flex items-center gap-4 mb-2">
-          <button
-            className="w-14 h-14 rounded-full border-2 border-primary text-primary text-2xl flex items-center justify-center hover:bg-primary hover:text-white transition"
-            onClick={() => setSelectedWeight(w => Math.max(minWeight, w - step))}
-            disabled={selectedWeight <= minWeight}
-            aria-label="הפחת משקל"
-          >
-            <Minus className="w-6 h-6" />
-          </button>
-          <span className="text-lg font-bold">{selectedWeight} גרם</span>
-          <button
-            className="w-14 h-14 rounded-full border-2 border-primary text-primary text-2xl flex items-center justify-center hover:bg-primary hover:text-white transition"
-            onClick={() => setSelectedWeight(w => w + step)}
-            aria-label="הוסף משקל"
-          >
-            <Plus className="w-6 h-6" />
-          </button>
-        </div>
-        <div className="text-lg font-bold text-success mb-2">₪{price} ל-{selectedWeight} גרם</div>
-        <Button
-          size="sm"
-          onClick={() => addToCart({ ...product, selectedWeight, price: Number(price) })}
-          className="rounded-full bg-gradient-to-r from-primary to-accent hover:from-accent hover:to-primary text-white font-bold shadow-lg transition-all"
-        >
-          <ShoppingCart className="ml-2 w-4 h-4" />
-          הוסף לסל
-        </Button>
+        {isOutOfStock && (
+          <div className="mb-4 flex flex-col items-center">
+            <span className="inline-block bg-gradient-to-r from-red-400 to-yellow-300 text-white text-base font-extrabold rounded-full px-6 py-2 shadow-lg tracking-wide animate-pulse">
+              נגמר המלאי
+            </span>
+            <span className="text-xs text-gray-500 mt-2">המוצר יחזור בקרוב</span>
+          </div>
+        )}
+        {!isOutOfStock && (
+          <>
+            <div className="flex items-center gap-4 mb-2">
+              <button
+                className="w-14 h-14 rounded-full border-2 border-primary text-primary text-2xl flex items-center justify-center hover:bg-primary hover:text-white transition"
+                onClick={() => setSelectedWeight(w => Math.max(minWeight, w - step))}
+                disabled={selectedWeight <= minWeight}
+                aria-label="הפחת משקל"
+              >
+                <Minus className="w-6 h-6" />
+              </button>
+              <span className="text-lg font-bold">{selectedWeight} גרם</span>
+              <button
+                className="w-14 h-14 rounded-full border-2 border-primary text-primary text-2xl flex items-center justify-center hover:bg-primary hover:text-white transition"
+                onClick={() => setSelectedWeight(w => w + step)}
+                aria-label="הוסף משקל"
+              >
+                <Plus className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="text-lg font-bold text-success mb-2">₪{price} ל-{selectedWeight} גרם</div>
+            <Button
+              size="sm"
+              onClick={() => addToCart({ ...product, selectedWeight, price: Number(price) })}
+              className="rounded-full bg-gradient-to-r from-primary to-accent hover:from-accent hover:to-primary text-white font-bold shadow-lg transition-all"
+            >
+              <ShoppingCart className="ml-2 w-4 h-4" />
+              הוסף לסל
+            </Button>
+          </>
+        )}
       </div>
     );
   }

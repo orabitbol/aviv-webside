@@ -79,6 +79,8 @@ export default function AdminPanel() {
 
   const [dateRange, setDateRange] = useState({ from: '', to: '' });
 
+  const [formData, setFormData] = useState({ name: "", description: "", category_id: "", image: "", is_active: true, base_weight: "", base_price: "", weight_step: "" });
+
   useEffect(() => {
     checkAuth();
   }, []);
@@ -248,6 +250,21 @@ export default function AdminPanel() {
   };
 
   const closeOrderItemsModal = () => setOrderItemsModal({ open: false, items: [], loading: false, orderId: null });
+
+  const markOutOfStock = async (productId) => {
+    await fetch(`/api/products/${productId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_active: false })
+    });
+    loadData();
+  };
+
+  const deleteProduct = async (productId) => {
+    await fetch(`/api/products/${productId}`, {
+      method: 'DELETE' });
+    loadData();
+  };
 
   if (isLoading) {
     return (
@@ -450,12 +467,22 @@ export default function AdminPanel() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>סטטוס</TableHead><TableHead>מלאי</TableHead><TableHead>מחיר</TableHead><TableHead>קטגוריה</TableHead><TableHead>שם</TableHead></TableRow></TableHeader><TableBody>
+                <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>סטטוס</TableHead><TableHead>מחיר</TableHead><TableHead>קטגוריה</TableHead><TableHead>שם</TableHead><TableHead>פעולות</TableHead></TableRow></TableHeader><TableBody>
                   {Array.isArray(filteredProducts) && filteredProducts.map((p) => (<TableRow key={p._id || p.id}>
-                    <TableCell><Badge variant={p.is_active ? 'default' : 'secondary'}>{p.is_active ? 'פעיל' : 'לא פעיל'}</Badge></TableCell>
-                    <TableCell>{p.stock_quantity}</TableCell><TableCell>₪{p.price?.toFixed(2)}</TableCell>
-                    <TableCell>{categories.find(c => c.id === p.category_id)?.name || 'לא ידוע'}</TableCell>
+                    <TableCell>
+                      {p.is_active ? (
+                        <Badge variant="default" className="bg-green-500 text-white">פעיל</Badge>
+                      ) : (
+                        <Badge variant="secondary" className="bg-yellow-400 text-black">נגמר המלאי</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>₪{p.price?.toFixed(2)}</TableCell>
+                    <TableCell>{categories.find(c => c._id === p.category_id || c.id === p.category_id)?.name || 'לא ידוע'}</TableCell>
                     <TableCell className="font-medium">{p.name}</TableCell>
+                    <TableCell className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => markOutOfStock(p._id)} className="text-warning border-warning">נגמר המלאי</Button>
+                      <Button size="sm" variant="destructive" onClick={() => deleteProduct(p._id)}>הסר מוצר</Button>
+                    </TableCell>
                   </TableRow>))}
                 </TableBody></Table></div>
                 <Pagination currentPage={productsPage} totalItems={filteredProducts.length} onPageChange={setProductsPage} />
@@ -495,25 +522,44 @@ export default function AdminPanel() {
 
 function AddProductDialog({ categories, onProductAdded, selectedCategoryId }) {
   const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState({ name: "", description: "", price: "", category_id: "", image: "", weight: "", stock_quantity: "", is_active: true, base_weight: "", base_price: "", weight_step: "" });
-  
+  const [formData, setFormData] = useState({ name: "", description: "", category_id: "", image: "", is_active: true, base_weight: "", base_price: "", weight_step: "" });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
+
   useEffect(() => {
     if(selectedCategoryId && selectedCategoryId !== 'all') {
       setFormData(prev => ({...prev, category_id: selectedCategoryId}));
     }
   }, [selectedCategoryId, open]);
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+      setFormData(prev => ({ ...prev, image: "" }));
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      let imageUrl = formData.image;
+      if (imageFile) {
+        // simulate upload (replace with real upload logic if needed)
+        imageUrl = imagePreview;
+      }
       const payload = {
         name: formData.name,
         description: formData.description,
-        price: Number(formData.price),
-        image: formData.image,
+        price: Number(formData.base_price),
+        image: imageUrl,
         category_id: formData.category_id,
-        weight: formData.weight,
-        stock_quantity: Number(formData.stock_quantity),
         is_active: formData.is_active,
         base_weight: Number(formData.base_weight),
         base_price: Number(formData.base_price),
@@ -525,24 +571,84 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId }) {
         body: JSON.stringify(payload)
       });
       setOpen(false);
-      setFormData({ name: "", description: "", price: "", category_id: "", image: "", weight: "", stock_quantity: "", is_active: true, base_weight: "", base_price: "", weight_step: "" });
+      setFormData({ name: "", description: "", category_id: "", image: "", is_active: true, base_weight: "", base_price: "", weight_step: "" });
+      setImageFile(null);
+      setImagePreview("");
       onProductAdded();
     } catch (error) { console.error('שגיאה בהוספת מוצר:', error); }
   };
 
+  // תצוגה מקדימה של המוצר
+  const renderPreview = () => (
+    <Dialog open={showPreview} onOpenChange={setShowPreview}>
+      <DialogContent className="max-w-lg" dir="rtl">
+        <DialogHeader>
+          <DialogTitle>תצוגה מקדימה</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col items-center p-6">
+          <div className="w-40 h-40 rounded-full overflow-hidden border-8 border-white shadow-lg bg-white flex items-center justify-center mb-4">
+            <img
+              src={imagePreview || formData.image || 'https://images.unsplash.com/photo-1508747703725-719777637510?w=300&h=300&fit=crop&q=80'}
+              alt={formData.name}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="text-xl font-bold text-primary mb-2">{formData.name || 'שם המוצר'}</div>
+          <div className="text-muted text-sm mb-2">{formData.description || 'תיאור המוצר'}</div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild><Button className="flex items-center gap-2"><Plus className="w-4 h-4" />הוסף מוצר</Button></DialogTrigger><DialogContent className="max-w-md" dir="rtl"><DialogHeader><DialogTitle className="text-right">הוספת מוצר חדש</DialogTitle></DialogHeader><form onSubmit={handleSubmit} className="space-y-4 text-right">
-      <div><Label htmlFor="name">שם</Label><Input id="name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required/></div>
-      <div><Label htmlFor="description">תיאור</Label><Textarea id="description" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})}/></div>
-      <div><Label htmlFor="price">מחיר</Label><Input id="price" type="number" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} required/></div>
-      <div><Label htmlFor="category">קטגוריה</Label><Select value={formData.category_id} onValueChange={(v) => setFormData({...formData, category_id: v})}><SelectTrigger><SelectValue placeholder="בחר קטגוריה" /></SelectTrigger><SelectContent>{categories.map(c => <SelectItem key={c._id || c.id} value={c._id || c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>
-      <div><Label htmlFor="weight">משקל/גודל</Label><Input id="weight" value={formData.weight} onChange={(e) => setFormData({...formData, weight: e.target.value})} placeholder='לדוגמה: 500ג, 1ק"ג'/></div>
-      <div><Label htmlFor="stock">כמות במלאי</Label><Input id="stock" type="number" value={formData.stock_quantity} onChange={(e) => setFormData({...formData, stock_quantity: e.target.value})} required/></div>
-      <div><Label htmlFor="image">כתובת תמונה</Label><Input id="image" value={formData.image} onChange={(e) => setFormData({...formData, image: e.target.value})} placeholder="https://..."/></div>
-      <div><Label htmlFor="base_weight">משקל בסיס (גרם)</Label><Input id="base_weight" type="number" value={formData.base_weight} onChange={(e) => setFormData({...formData, base_weight: e.target.value})} required/></div>
-      <div><Label htmlFor="base_price">מחיר למשקל בסיס</Label><Input id="base_price" type="number" step="0.01" value={formData.base_price} onChange={(e) => setFormData({...formData, base_price: e.target.value})} required/></div>
-      <div><Label htmlFor="weight_step">קפיצת משקל (גרם)</Label><Input id="weight_step" type="number" value={formData.weight_step} onChange={(e) => setFormData({...formData, weight_step: e.target.value})} required/></div>
-      <Button type="submit" className="w-full">הוסף מוצר</Button></form></DialogContent></Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="flex items-center gap-2"><Plus className="w-4 h-4" />הוסף מוצר</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl rounded-3xl shadow-2xl bg-gradient-to-br from-white via-slate-50 to-primary/10 backdrop-blur-xl border border-primary/20 p-10" dir="rtl">
+        <DialogHeader>
+          <DialogTitle className="text-3xl font-extrabold text-primary mb-4 tracking-tight">הוספת מוצר חדש</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-10 text-right">
+          <div className="flex flex-col gap-6">
+            <Label htmlFor="name" className="text-lg font-bold">שם</Label>
+            <Input id="name" value={formData.name} onChange={handleInputChange} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
+            <Label htmlFor="description" className="text-lg font-bold">תיאור</Label>
+            <Textarea id="description" value={formData.description} onChange={handleInputChange} className="rounded-2xl text-lg px-6 py-3 shadow-sm min-h-[80px]"/>
+            <Label htmlFor="category" className="text-lg font-bold">קטגוריה</Label>
+            <Select value={formData.category_id} onValueChange={(v) => setFormData({...formData, category_id: v})}>
+              <SelectTrigger className="rounded-full text-lg px-6 py-3 shadow-sm"><SelectValue placeholder="בחר קטגוריה" /></SelectTrigger>
+              <SelectContent>{categories.map(c => <SelectItem key={c._id || c.id} value={c._id || c.id}>{c.name}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-6 items-center justify-between">
+            <Label className="text-lg font-bold">תמונה</Label>
+            <label htmlFor="product-image-upload" className="flex flex-col items-center justify-center w-36 h-36 rounded-full border-4 border-primary bg-white shadow-lg cursor-pointer hover:bg-primary/10 transition group">
+              {imagePreview ? (
+                <img src={imagePreview} alt="תצוגה מקדימה" className="w-full h-full object-cover rounded-full" />
+              ) : (
+                <span className="flex flex-col items-center justify-center text-primary group-hover:text-accent">
+                  <svg xmlns='http://www.w3.org/2000/svg' className="w-10 h-10 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5m0 0l5 5m-5-5v12" /></svg>
+                  <span className="font-bold">העלה תמונה</span>
+                </span>
+              )}
+              <input id="product-image-upload" type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+            </label>
+            <Label htmlFor="base_weight" className="text-lg font-bold">משקל בסיס (גרם)</Label>
+            <Input id="base_weight" type="number" value={formData.base_weight} onChange={handleInputChange} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
+            <Label htmlFor="base_price" className="text-lg font-bold">מחיר למשקל בסיס</Label>
+            <Input id="base_price" type="number" step="0.01" value={formData.base_price} onChange={handleInputChange} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
+            <Label htmlFor="weight_step" className="text-lg font-bold">קפיצת משקל (גרם)</Label>
+            <Input id="weight_step" type="number" value={formData.weight_step} onChange={handleInputChange} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
+            <div className="flex gap-4 mt-4 w-full">
+              <Button type="button" variant="outline" className="rounded-full w-1/2 text-lg font-bold border-primary text-primary hover:bg-primary/10" onClick={() => setShowPreview(true)}>תצוגה מקדימה</Button>
+              <Button type="submit" className="rounded-full w-1/2 text-lg font-bold bg-gradient-to-r from-primary to-accent hover:from-accent hover:to-primary text-white shadow-lg transition-all">הוסף מוצר</Button>
+            </div>
+          </div>
+        </form>
+        {showPreview && renderPreview()}
+      </DialogContent>
+    </Dialog>
   );
 }
 
