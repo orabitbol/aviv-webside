@@ -486,8 +486,17 @@ export default function AdminPanel() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>סטטוס</TableHead><TableHead>מחיר</TableHead><TableHead>קטגוריה</TableHead><TableHead>שם</TableHead><TableHead>פעולות</TableHead></TableRow></TableHeader><TableBody>
+                <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>תמונה</TableHead><TableHead>סטטוס</TableHead><TableHead>מחיר</TableHead><TableHead>קטגוריה</TableHead><TableHead>שם</TableHead><TableHead>פעולות</TableHead></TableRow></TableHeader><TableBody>
                   {Array.isArray(filteredProducts) && filteredProducts.map((p) => (<TableRow key={p._id || p.id}>
+                    <TableCell>
+                      {p.image && (
+                        <img
+                          src={p.image.startsWith('/uploads') ? `${getApiBaseUrl()}${p.image}` : p.image}
+                          alt={p.name}
+                          className="w-14 h-14 rounded-full object-cover border border-border shadow mx-auto"
+                        />
+                      )}
+                    </TableCell>
                     <TableCell>
                       {p.is_active ? (
                         <Badge variant="default" className="bg-green-500 text-white">פעיל</Badge>
