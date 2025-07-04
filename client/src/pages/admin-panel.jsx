@@ -76,6 +76,8 @@ export default function AdminPanel() {
   const [productsPage, setProductsPage] = useState(1);
   
   const [categoriesPage, setCategoriesPage] = useState(1);
+  const [productsPages, setProductsPages] = useState(1);
+  const [categoriesPages, setCategoriesPages] = useState(1);
 
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -143,19 +145,17 @@ export default function AdminPanel() {
 
   const loadData = async () => {
     try {
-      const [ordersRes, productsRes, categoriesRes] = await Promise.all([
-        fetch("/api/orders"),
-        fetch("/api/products"),
-        fetch("/api/categories")
+      const [productsRes, categoriesRes] = await Promise.all([
+        fetch(`/api/products?page=${productsPage}&limit=20`),
+        fetch(`/api/categories?page=${categoriesPage}&limit=20`)
       ]);
-      const ordersData = await ordersRes.json();
       const productsData = await productsRes.json();
       const categoriesData = await categoriesRes.json();
-      const ordersArr = Array.isArray(ordersData.data) ? ordersData.data : (Array.isArray(ordersData) ? ordersData : []);
-      setOrders(ordersArr);
       setProducts(Array.isArray(productsData.data) ? productsData.data : []);
       setCategories(Array.isArray(categoriesData.data) ? categoriesData.data : []);
       setFilteredProducts(Array.isArray(productsData.data) ? productsData.data : []);
+      setProductsPages(productsData.pages || 1);
+      setCategoriesPages(categoriesData.pages || 1);
     } catch (error) {
       console.error('שגיאה בטעינת נתונים:', error);
     }
@@ -398,7 +398,8 @@ export default function AdminPanel() {
                                         <tr>
                                           <th className="px-4 py-2 text-right font-bold text-text">שם מוצר</th>
                                           <th className="px-4 py-2 text-right font-bold text-text">כמות</th>
-                                          <th className="px-4 py-2 text-right font-bold text-text">מחיר ליחידה</th>
+                                          <th className="px-4 py-2 text-right font-bold text-text">גרמים</th>
+                                          <th className="px-4 py-2 text-right font-bold text-text">מחיר ל-100 גרם</th>
                                           <th className="px-4 py-2 text-right font-bold text-text">סה"כ</th>
                                         </tr>
                                       </thead>
@@ -414,8 +415,9 @@ export default function AdminPanel() {
                                                 {product ? product.name : '—'}
                                               </td>
                                               <td className="px-4 py-2 text-text">{item.quantity}</td>
-                                              <td className="px-4 py-2 text-text">₪{item.price?.toFixed(2)}</td>
-                                              <td className="px-4 py-2 text-success font-bold">₪{(item.price * item.quantity).toFixed(2)}</td>
+                                              <td className="px-4 py-2 text-text">{item.weight} גרם</td>
+                                              <td className="px-4 py-2 text-text">₪{item.unit_price?.toFixed(2)} / {product?.base_weight || 100} גרם</td>
+                                              <td className="px-4 py-2 text-success font-bold">₪{item.price?.toFixed(2)}</td>
                                             </tr>
                                           );
                                         })}
@@ -499,7 +501,7 @@ export default function AdminPanel() {
                     </TableCell>
                   </TableRow>))}
                 </TableBody></Table></div>
-                <Pagination currentPage={productsPage} totalItems={Array.isArray(filteredProducts) ? filteredProducts.length : 0} onPageChange={setProductsPage} />
+                <Pagination currentPage={productsPage} totalItems={productsPages * 20} onPageChange={p => { setProductsPage(p); loadData(); }} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -537,7 +539,7 @@ export default function AdminPanel() {
                     </TableCell>
                   </TableRow>))}
                 </TableBody></Table></div>
-                <Pagination currentPage={categoriesPage} totalItems={Array.isArray(categories) ? categories.length : 0} onPageChange={setCategoriesPage} />
+                <Pagination currentPage={categoriesPage} totalItems={categoriesPages * 20} onPageChange={p => { setCategoriesPage(p); loadData(); }} />
               </CardContent>
             </Card>
           </TabsContent>

@@ -3,6 +3,7 @@ const Order = require('../models/Order');
 const { requireAdmin } = require('../auth/middleware');
 const router = express.Router();
 const OrderItem = require('../models/OrderItem');
+const Product = require('../models/Product');
 
 // Get all orders (with pagination)
 router.get('/', requireAdmin, async (req, res) => {
@@ -52,8 +53,22 @@ router.post('/', async (req, res) => {
     if (Array.isArray(items) && items.length > 0) {
       createdItems = await Promise.all(items.map(async (item, idx) => {
         try {
-          console.log('יצירת OrderItem:', item);
-          const orderItem = new OrderItem({ ...item, order_id: order._id });
+          // Fetch product to get base_weight and base_price
+          const product = await Product.findById(item.product_id);
+          if (!product) throw new Error('Product not found');
+          // Calculate weight and unit_price
+          // If item.weight is provided, use it; else calculate from quantity * base_weight
+          const weight = item.weight ? item.weight : (item.quantity * product.base_weight);
+          const unit_price = product.base_price; // מחיר ליחידת משקל (למשל ל-100 גרם)
+          // Calculate total price for this item
+          const price = (weight / product.base_weight) * product.base_price;
+          const orderItem = new OrderItem({
+            ...item,
+            order_id: order._id,
+            weight,
+            unit_price,
+            price
+          });
           await orderItem.save();
           return orderItem;
         } catch (err) {

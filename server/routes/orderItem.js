@@ -20,7 +20,11 @@ router.get('/order/:orderId', async (req, res) => {
     const orderId = mongoose.Types.ObjectId.isValid(req.params.orderId)
       ? new mongoose.Types.ObjectId(req.params.orderId)
       : req.params.orderId;
-    const items = await OrderItem.find({ order_id: orderId });
+    const items = await OrderItem.find({ order_id: orderId })
+      .populate({
+        path: 'product_id',
+        select: 'name base_weight base_price weight_step price image',
+      });
     res.json(items);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -41,6 +45,10 @@ router.get('/:id', async (req, res) => {
 // Create new order item
 router.post('/', requireAdmin, async (req, res) => {
   try {
+    const { weight, unit_price } = req.body;
+    if (typeof weight !== 'number' || typeof unit_price !== 'number') {
+      return res.status(400).json({ error: 'weight and unit_price are required and must be numbers' });
+    }
     const item = new OrderItem(req.body);
     await item.save();
     res.status(201).json(item);
@@ -52,6 +60,10 @@ router.post('/', requireAdmin, async (req, res) => {
 // Update order item
 router.put('/:id', requireAdmin, async (req, res) => {
   try {
+    const { weight, unit_price } = req.body;
+    if (typeof weight !== 'number' || typeof unit_price !== 'number') {
+      return res.status(400).json({ error: 'weight and unit_price are required and must be numbers' });
+    }
     const item = await OrderItem.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!item) return res.status(404).json({ error: 'OrderItem not found' });
     res.json(item);

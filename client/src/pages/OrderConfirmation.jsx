@@ -148,19 +148,29 @@ export default function OrderConfirmation() {
             <CardTitle className="text-primary">פריטים בהזמנה</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {orderItems.map((item) => (
-                <div key={item.id} className="flex justify-between items-center py-3 border-b border-border last:border-b-0">
-                  <div className="text-left">
-                    <p className="font-semibold text-success">₪{item.subtotal?.toFixed(2)}</p>
-                    <p className="text-sm text-muted">₪{item.price?.toFixed(2)} ליחידה</p>
-                  </div>
-                  <div className="flex-1 text-right">
-                    <h4 className="font-medium text-text">{item.product_name}</h4>
-                    <p className="text-sm text-muted">כמות: {item.quantity}</p>
-                  </div>
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="min-w-full rounded-xl overflow-hidden shadow border border-border">
+                <thead className="bg-background">
+                  <tr>
+                    <th className="px-4 py-2 text-right font-bold text-text">שם מוצר</th>
+                    <th className="px-4 py-2 text-right font-bold text-text">כמות</th>
+                    <th className="px-4 py-2 text-right font-bold text-text">גרמים</th>
+                    <th className="px-4 py-2 text-right font-bold text-text">מחיר ל-100 גרם</th>
+                    <th className="px-4 py-2 text-right font-bold text-text">סה"כ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orderItems.map((item) => (
+                    <tr key={item._id || item.id} className="hover:bg-accent/10 transition">
+                      <td className="px-4 py-2 text-text">{item.product_id?.name || item.product_name || '—'}</td>
+                      <td className="px-4 py-2 text-text">{item.quantity}</td>
+                      <td className="px-4 py-2 text-text">{item.weight} גרם</td>
+                      <td className="px-4 py-2 text-text">₪{item.unit_price?.toFixed(2)} / {item.product_id?.base_weight || 100} גרם</td>
+                      <td className="px-4 py-2 text-success font-bold">₪{item.price?.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </CardContent>
         </Card>
