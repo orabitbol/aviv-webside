@@ -214,7 +214,48 @@ export default function AdminPanel() {
   };
 
   const exportOrders = () => {
-    // CSV export logic remains the same
+    if (!Array.isArray(filteredOrders) || filteredOrders.length === 0) {
+      alert("אין הזמנות לייצוא");
+      return;
+    }
+    // הגדרת כותרות
+    const headers = [
+      "מספר הזמנה",
+      "תאריך",
+      "סטטוס",
+      "סכום",
+      "שם לקוח",
+      "אימייל",
+      "טלפון",
+      "כתובת"
+    ];
+    // בניית שורות
+    const rows = filteredOrders.map(order => [
+      order.order_number || order._id || "",
+      order.createdAt ? new Date(order.createdAt).toLocaleString("he-IL") : "",
+      order.status || "",
+      order.total?.toFixed(2) || "",
+      order.customerName || "",
+      order.customerEmail || "",
+      order.phone || "",
+      order.address || ""
+    ]);
+    // בניית מחרוזת CSV
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(","))
+    ].join("\n");
+
+    // יצירת Blob והורדה
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "orders.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const handleLogin = async (e) => {
