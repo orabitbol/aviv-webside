@@ -52,7 +52,7 @@ const FormItem = React.forwardRef(({ className, ...props }, ref) => {
 
   return (
     (<FormItemContext.Provider value={{ id }}>
-      <div ref={ref} className={cn("space-y-2", className)} {...props} />
+      <div ref={ref} className={cn("space-y-2 bg-surface/80 rounded-2xl border border-border p-4 shadow-sm", className)} {...props} />
     </FormItemContext.Provider>)
   );
 })
@@ -64,7 +64,7 @@ const FormLabel = React.forwardRef(({ className, ...props }, ref) => {
   return (
     (<Label
       ref={ref}
-      className={cn(error && "text-destructive", className)}
+      className={cn("text-base font-semibold text-primary", error && "text-error", className)}
       htmlFor={formItemId}
       {...props} />)
   );
@@ -84,6 +84,7 @@ const FormControl = React.forwardRef(({ ...props }, ref) => {
           : `${formDescriptionId} ${formMessageId}`
       }
       aria-invalid={!!error}
+      className="w-full rounded-xl border-2 border-border focus:border-primary focus:ring-2 focus:ring-primary/40 bg-surface px-4 py-2 text-base text-text placeholder:text-muted transition-all duration-200"
       {...props} />)
   );
 })
@@ -96,7 +97,7 @@ const FormDescription = React.forwardRef(({ className, ...props }, ref) => {
     (<p
       ref={ref}
       id={formDescriptionId}
-      className={cn("text-[0.8rem] text-muted-foreground", className)}
+      className={cn("text-sm text-muted mt-1", className)}
       {...props} />)
   );
 })
@@ -114,7 +115,7 @@ const FormMessage = React.forwardRef(({ className, children, ...props }, ref) =>
     (<p
       ref={ref}
       id={formMessageId}
-      className={cn("text-[0.8rem] font-medium text-destructive", className)}
+      className={cn("text-sm font-bold text-error mt-1", className)}
       {...props}>
       {body}
     </p>)

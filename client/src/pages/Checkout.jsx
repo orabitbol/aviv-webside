@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { CreditCard, MapPin, Package, ShoppingCart, Check, Trash2, Plus, Minus, ArrowRight, ArrowLeft } from "lucide-react";
+import { CreditCard, MapPin, Check, ArrowRight, ArrowLeft } from "lucide-react";
 import { toast, Toaster } from "sonner";
 
 const SOUTHERN_CITIES = [
@@ -16,10 +16,9 @@ const SOUTHERN_CITIES = [
 ];
 
 const STEPS = [
-  { id: 1, name: "סקירת סל", icon: ShoppingCart },
-  { id: 2, name: "משלוח", icon: MapPin },
-  { id: 3, name: "תשלום", icon: CreditCard },
-  { id: 4, name: "אישור", icon: Check }
+  { id: 1, name: "משלוח", icon: MapPin },
+  { id: 2, name: "תשלום", icon: CreditCard },
+  { id: 3, name: "אישור", icon: Check }
 ];
 
 export default function Checkout() {
@@ -44,25 +43,6 @@ export default function Checkout() {
 
   const handleInputChange = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
 
-  const updateQuantity = (productId, newQuantity) => {
-    if (newQuantity < 1) return;
-    const updatedCart = cartItems.map(item => item.id === productId ? { ...item, quantity: newQuantity } : item);
-    setCartItems(updatedCart);
-    localStorage.setItem('cart', JSON.stringify(updatedCart));
-    window.dispatchEvent(new Event('storage'));
-  };
-
-  const removeItem = (productId) => {
-    const updatedCart = cartItems.filter(item => item.id !== productId);
-    setCartItems(updatedCart);
-    localStorage.setItem('cart', JSON.stringify(updatedCart));
-    window.dispatchEvent(new Event('storage'));
-    toast.error('הפריט הוסר מהסל');
-    if (updatedCart.length === 0) {
-      navigate(createPageUrl("Cart"));
-    }
-  };
-
   const getTotalPrice = () => cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
 
   const validateShipping = () => {
@@ -79,8 +59,8 @@ export default function Checkout() {
   };
 
   const handleNextStep = () => {
-    if (step === 2 && !validateShipping()) return;
-    if (step === 3 && !formData.payment_method) {
+    if (step === 1 && !validateShipping()) return;
+    if (step === 2 && !formData.payment_method) {
       toast.error('אנא בחר אמצעי תשלום');
       return;
     }
@@ -136,56 +116,30 @@ export default function Checkout() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <Toaster richColors />
       <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 text-center">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-green-600">תשלום</span>
+        <h1 className="text-3xl md:text-4xl font-bold text-text mb-4 text-center">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">תשלום</span>
         </h1>
         {/* Step Indicator */}
-        <div className="flex justify-between items-center max-w-2xl mx-auto">
+        <div className="flex items-center max-w-2xl mx-auto">
           {STEPS.map((s, index) => (
             <React.Fragment key={s.id}>
-              {index > 0 && (
-                <div className={`flex-1 h-1 mx-2 rounded-full ${step > index ? 'bg-orange-500' : 'bg-gray-200'}`} />
-              )}
               <div className="flex flex-col items-center">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${step >= s.id ? 'bg-orange-500 border-orange-500 text-white' : 'bg-gray-100 border-gray-300 text-gray-400'}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${step >= s.id ? 'bg-primary border-primary text-white' : 'bg-surface border-border text-muted'}`}>
                   <s.icon className="w-5 h-5" />
                 </div>
-                <p className={`mt-2 text-xs text-center font-medium ${step >= s.id ? 'text-orange-600' : 'text-gray-500'}`}>{s.name}</p>
+                <p className={`mt-2 text-xs text-center font-medium ${step >= s.id ? 'text-primary' : 'text-muted'}`}>{s.name}</p>
               </div>
+              {index < STEPS.length - 1 && (
+                <div className="flex-1 h-1 mx-2 rounded-full bg-border" />
+              )}
             </React.Fragment>
-          )).reverse()}
+          ))}
         </div>
       </div>
 
-      <Card className="border-none shadow-2xl bg-white/80 backdrop-blur-sm rounded-2xl">
+      <Card className="border-2 border-border shadow-2xl bg-surface/90 backdrop-blur-md rounded-2xl">
         <CardContent className="p-8 text-right">
           {step === 1 && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold">סקירת הסל שלך</h2>
-              {cartItems.map((item) => (
-                <div key={item.id} className="flex items-center gap-4 border-b pb-4 last:border-b-0">
-                   <Button size="icon" variant="ghost" onClick={() => removeItem(item.id)} className="text-red-500 hover:text-red-700 hover:bg-red-100 rounded-full w-8 h-8"><Trash2 className="w-4 h-4" /></Button>
-                   <p className="font-semibold w-20 text-left">₪{(item.price * item.quantity).toFixed(2)}</p>
-                  <div className="flex items-center gap-2">
-                    <Button size="icon" variant="outline" onClick={() => updateQuantity(item.id, item.quantity - 1)} disabled={item.quantity <= 1} className="w-8 h-8 rounded-full"><Minus className="w-4 h-4" /></Button>
-                    <span>{item.quantity}</span>
-                    <Button size="icon" variant="outline" onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-8 h-8 rounded-full"><Plus className="w-4 h-4" /></Button>
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold">{item.name}</p>
-                    <p className="text-sm text-green-600">₪{item.price.toFixed(2)}</p>
-                  </div>
-                  <img src={item.image_url || `https://images.unsplash.com/photo-1508747703725-719777637510?w=100&h=100&fit=crop&q=80`} alt={item.name} className="w-16 h-16 rounded-lg object-cover"/>
-                </div>
-              ))}
-              <div className="pt-4 text-left">
-                <p className="text-lg font-bold"><span className="text-green-600">₪{getTotalPrice().toFixed(2)}</span> :סה"כ ביניים</p>
-                <p className="text-sm text-gray-500">דמי משלוח יחושבו בשלב הבא.</p>
-              </div>
-            </div>
-          )}
-
-          {step === 2 && (
             <div className="space-y-4">
               <h2 className="text-xl font-bold">פרטי משלוח</h2>
               <div className="grid md:grid-cols-2 gap-4">
@@ -201,10 +155,11 @@ export default function Checkout() {
                   <Select value={formData.shipping_city} onValueChange={(value) => handleInputChange('shipping_city', value)}><SelectTrigger><SelectValue placeholder="בחר עיר" /></SelectTrigger><SelectContent>{SOUTHERN_CITIES.map(city => <SelectItem key={city} value={city}>{city}</SelectItem>)}</SelectContent></Select>
                 </div>
               </div>
+              <div><Label htmlFor="notes">הערות למשלוח</Label><Textarea id="notes" value={formData.notes} onChange={(e) => handleInputChange('notes', e.target.value)} /></div>
             </div>
           )}
 
-          {step === 3 && (
+          {step === 2 && (
             <div className="space-y-4">
               <h2 className="text-xl font-bold">אמצעי תשלום</h2>
               <div>
@@ -215,7 +170,7 @@ export default function Checkout() {
             </div>
           )}
 
-          {step === 4 && (
+          {step === 3 && (
             <div className="space-y-6">
               <h2 className="text-xl font-bold">אישור ההזמנה שלך</h2>
               <div className="grid md:grid-cols-2 gap-6">
@@ -249,8 +204,8 @@ export default function Checkout() {
 
           {/* Navigation Buttons */}
           <div className="mt-8 flex justify-between items-center">
-             {step < 4 ? (
-              <Button onClick={handleNextStep} className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full">הבא <ArrowLeft className="w-4 h-4 mr-2" /></Button>
+             {step < 3 ? (
+              <Button onClick={handleNextStep} className="bg-gradient-to-r from-primary to-accent text-white rounded-full">הבא <ArrowLeft className="w-4 h-4 mr-2" /></Button>
             ) : (
               <Button onClick={handleSubmit} disabled={isProcessing} className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full">
                 {isProcessing ? 'מעבד...' : 'בצע הזמנה'}

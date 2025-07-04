@@ -111,29 +111,29 @@ export default function Products() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <Toaster richColors />
       <div className="mb-8 text-center">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          מוצרי <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-green-600">פרימיום</span>
+        <h1 className="text-3xl md:text-4xl font-bold text-text mb-4">
+          מוצרי <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">פרימיום</span>
         </h1>
-        <p className="text-lg text-gray-600">
+        <p className="text-lg text-muted">
           גלו את מבחר האגוזים והזרעים המובחרים שלנו
         </p>
       </div>
 
       {/* Filters */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 mb-8">
+      <div className="bg-surface/90 backdrop-blur-md rounded-2xl shadow-xl p-6 mb-8 border border-border">
         <div className="flex flex-col md:flex-row-reverse gap-4 items-center">
           <div className="relative flex-1 w-full">
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted" />
             <Input 
               placeholder="חיפוש מוצרים..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pr-10 border-orange-300 focus:border-orange-500"
+              className="pr-10 border-border focus:border-primary rounded-full bg-surface text-text placeholder:text-muted"
             />
           </div>
           
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-full md:w-48 border-orange-300 focus:border-orange-500">
+            <SelectTrigger className="w-full md:w-48 border-border focus:border-primary rounded-full bg-surface text-text">
               <SelectValue placeholder="מיון לפי" />
             </SelectTrigger>
             <SelectContent>
@@ -144,7 +144,7 @@ export default function Products() {
           </Select>
 
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-full md:w-48 border-orange-300 focus:border-orange-500">
+            <SelectTrigger className="w-full md:w-48 border-border focus:border-primary rounded-full bg-surface text-text">
               <SelectValue placeholder="כל הקטגוריות" />
             </SelectTrigger>
             <SelectContent>
@@ -161,57 +161,55 @@ export default function Products() {
 
       {/* Products Grid */}
       {filteredProducts.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-12">
           {filteredProducts.map((product) => (
-            <div key={product._id} className="group text-center flex flex-col items-center">
-              <div className="relative w-48 h-48">
+            <Card key={product._id} className="group text-center flex flex-col items-center bg-surface/90 border-2 border-border shadow-xl hover:shadow-2xl transition-all duration-300 rounded-3xl p-4">
+              <div className="relative w-40 h-40 mb-4">
                 <img 
                   src={product.image_url || `https://images.unsplash.com/photo-1508747703725-719777637510?w=300&h=300&fit=crop&q=80`}
                   alt={product.name}
-                  className="w-full h-full object-cover rounded-full shadow-lg transition-all duration-300 group-hover:shadow-2xl group-hover:scale-105 border-4 border-white"
+                  className="w-full h-full object-cover rounded-full shadow-xl transition-all duration-300 group-hover:shadow-2xl group-hover:scale-105 border-4 border-surface"
                 />
-                 {product.stock_quantity < 5 && product.stock_quantity > 0 && (
-                    <Badge variant="destructive" className="absolute top-2 left-2">אזל מהמלאי</Badge>
-                  )}
+                {product.stock_quantity < 5 && product.stock_quantity > 0 && (
+                  <Badge variant="destructive" className="absolute top-2 left-2">אזל מהמלאי</Badge>
+                )}
               </div>
-              <div className="mt-4 flex-grow flex flex-col items-center">
-                 <h3 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-orange-500 transition-colors">
-                    {product.name}
-                  </h3>
-                  <p className="text-gray-600 text-sm mb-2 h-10 line-clamp-2">
-                    {product.description || "אגוזים וזרעים באיכות פרימיום"}
-                  </p>
-                  <div className="flex items-center justify-center gap-4 my-2">
-                     <span className="text-xs text-gray-500">{product.weight}</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-gray-500 ml-1">4.9</span>
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
-                        ))}
-                      </div>
+              <div className="flex-grow flex flex-col items-center">
+                <h3 className="text-lg font-bold text-primary mb-1 group-hover:text-accent transition-colors">
+                  {product.name}
+                </h3>
+                <p className="text-muted text-sm mb-2 h-10 line-clamp-2">
+                  {product.description || "אגוזים וזרעים באיכות פרימיום"}
+                </p>
+                <div className="flex items-center justify-center gap-4 my-2">
+                  <span className="text-xs text-muted">{product.weight}</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-muted ml-1">4.9</span>
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-3 h-3 fill-accent text-accent" />
+                    ))}
                   </div>
+                </div>
               </div>
-              <div className="mt-auto w-full">
-                  <span className="text-xl font-bold text-green-600">
-                    ₪{product.price?.toFixed(2)}
-                  </span>
-                  <Button 
-                    size="sm" 
-                    onClick={() => addToCart(product)}
-                    disabled={product.stock_quantity === 0}
-                    className="w-full mt-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-md hover:shadow-lg transition-shadow"
-                  >
-                    {product.stock_quantity === 0 ? 'אזל מהמלאי' : 'הוספה לסל'}
-                    <ShoppingCart className="w-4 h-4 mr-1" />
-                  </Button>
+              <div className="mt-auto w-full flex flex-col items-center gap-2">
+                <span className="text-xl font-bold text-success">
+                  ₪{product.price?.toFixed(2)}
+                </span>
+                <Button 
+                  size="sm" 
+                  onClick={() => addToCart(product)}
+                  className="w-full rounded-full bg-gradient-to-r from-primary to-accent hover:from-accent hover:to-primary text-white font-bold shadow-lg transition-all"
+                >
+                  <ShoppingCart className="ml-2 w-4 h-4" />
+                  הוסף לסל
+                </Button>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       ) : (
         <div className="text-center py-12">
-          <Filter className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600 text-lg">לא נמצאו מוצרים התואמים את החיפוש.</p>
+          <p className="text-muted text-lg">לא נמצאו מוצרים תואמים.</p>
         </div>
       )}
     </div>
