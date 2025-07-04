@@ -17,6 +17,8 @@ import PropTypes from "prop-types";
 import { DateRange } from 'react-date-range';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
+import { toast } from "@/components/ui/use-toast";
+import { CheckCircle, Loader2, Truck, PackageCheck, Ban, Clock } from "lucide-react";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -333,6 +335,40 @@ export default function AdminPanel() {
     loadData();
   };
 
+  // פונקציה לעדכון סטטוס הזמנה (עדכון מקומי + toast)
+  const updateOrderStatus = async (orderId, newStatus) => {
+    try {
+      await fetch(`${getApiBaseUrl()}/api/orders/${orderId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status: newStatus })
+      });
+      // עדכון מקומי של orders ו-filteredOrders
+      setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: newStatus } : o));
+      setFilteredOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: newStatus } : o));
+      toast.success("הסטטוס עודכן בהצלחה!");
+    } catch {
+      toast.error("שגיאה בעדכון סטטוס ההזמנה");
+    }
+  };
+
+  // מיפוי סטטוס לעיצוב ואייקון
+  const statusStyles = {
+    pending:   "bg-yellow-100 text-yellow-800 border-yellow-300",
+    processing:"bg-blue-100 text-blue-800 border-blue-300",
+    shipped:   "bg-purple-100 text-purple-800 border-purple-300",
+    delivered: "bg-green-100 text-green-800 border-green-300",
+    cancelled: "bg-red-100 text-red-800 border-red-300"
+  };
+  const statusIcons = {
+    pending:   <Clock className="w-4 h-4 mr-1 inline" />,
+    processing:<Loader2 className="w-4 h-4 mr-1 inline animate-spin" />,
+    shipped:   <Truck className="w-4 h-4 mr-1 inline" />,
+    delivered: <PackageCheck className="w-4 h-4 mr-1 inline" />,
+    cancelled: <Ban className="w-4 h-4 mr-1 inline" />
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -456,7 +492,22 @@ export default function AdminPanel() {
                         <TableRow key={order._id || order.id}>
                           <TableCell>{order._id || order.id || (idx + 1 + (ordersPage - 1) * ITEMS_PER_PAGE)}</TableCell>
                           <TableCell>{order.createdAt ? format(new Date(order.createdAt), 'd LLL, yyyy', { locale: he }) : '—'}</TableCell>
-                          <TableCell><Badge variant={order.status === 'delivered' ? 'default' : 'secondary'}>{order.status}</Badge></TableCell>
+                          <TableCell>
+                            <div className="relative">
+                              <Select value={order.status} onValueChange={val => updateOrderStatus(order._id, val)}>
+                                <SelectTrigger className={`w-36 rounded-full border-2 ${statusStyles[order.status] || ''} flex items-center gap-2 px-3 py-1 shadow-sm transition-all`}>
+                                  <SelectValue placeholder="בחר סטטוס" />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl shadow-2xl">
+                                  <SelectItem value="pending"><Clock className="w-4 h-4 mr-1 inline" /> ממתינה</SelectItem>
+                                  <SelectItem value="processing"><Loader2 className="w-4 h-4 mr-1 inline animate-spin" /> בעיבוד</SelectItem>
+                                  <SelectItem value="shipped"><Truck className="w-4 h-4 mr-1 inline" /> נשלחה</SelectItem>
+                                  <SelectItem value="delivered"><PackageCheck className="w-4 h-4 mr-1 inline" /> התקבלה</SelectItem>
+                                  <SelectItem value="cancelled"><Ban className="w-4 h-4 mr-1 inline" /> בוטלה</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </TableCell>
                           <TableCell>₪{order.total?.toFixed(2)}</TableCell>
                           <TableCell>{order.customerName}</TableCell>
                           <TableCell>{order.customerEmail}</TableCell>
