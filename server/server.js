@@ -5,6 +5,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const cookieSession = require('cookie-session');
 dotenv.config();
 
 const app = express();
@@ -50,17 +51,13 @@ app.use(express.json({
     }
   }
 }));
-app.use(session({
-  name: 'session',
-  secret: process.env.SESSION_SECRET || 'secret',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 1000 * 60 * 60 * 24
-  }
+app.use(cookieSession({
+  name: "session",
+  keys: [process.env.SESSION_SECRET],
+  maxAge: 24 * 60 * 60 * 1000,
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  secure: process.env.NODE_ENV === "production",
+  httpOnly: true,
 }));
 
 // הגשת קבצים סטטיים מתיקיית uploads (רק תמונות)
