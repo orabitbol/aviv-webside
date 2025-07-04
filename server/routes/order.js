@@ -98,7 +98,9 @@ router.post('/', [
       createdItems = createdItems.filter(Boolean);
     }
     const orderTotal = createdItems.reduce((sum, item) => sum + (item.total_price || 0), 0);
-    order.total = orderTotal;
+    const shipping = 5.99;
+    order.shipping = shipping;
+    order.total = orderTotal + shipping;
     await order.save();
     res.status(201).json({ order, items: createdItems });
   } catch (err) {
