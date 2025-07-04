@@ -8,7 +8,11 @@ const orderItemSchema = new mongoose.Schema({
   weight: { type: Number, required: true },
   unit_price: { type: Number, required: true },
   product_name: { type: String },
-  total_price: { type: Number }
+  total_price: { type: Number },
+  selectedWeight: { type: Number },
+  base_weight: { type: Number },
+  base_price: { type: Number },
+  image: { type: String }
 });
 
 module.exports = mongoose.model('OrderItem', orderItemSchema); 

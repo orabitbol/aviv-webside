@@ -82,7 +82,11 @@ router.post('/', [
             unit_price,
             price,
             product_name: product.name,
-            total_price
+            total_price,
+            selectedWeight: item.selectedWeight,
+            base_weight: product.base_weight,
+            base_price: product.base_price,
+            image: product.image
           });
           await orderItem.save();
           return orderItem;
