@@ -102,7 +102,11 @@ export default function AdminPanel() {
   useEffect(() => {
     if (isAuthenticated) {
       const from = dateRange[0].startDate ? new Date(dateRange[0].startDate).toISOString() : '';
-      const to = dateRange[0].endDate ? new Date(dateRange[0].endDate).toISOString() : '';
+      let to = dateRange[0].endDate ? new Date(dateRange[0].endDate) : '';
+      if (to) {
+        to.setHours(23, 59, 59, 999); // סוף היום
+        to = to.toISOString();
+      }
       loadOrders(ordersPage, from, to);
       loadData();
     }
