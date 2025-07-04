@@ -77,6 +77,7 @@ app.use(cookieSession({
 
 // הגשת קבצים סטטיים מתיקיית uploads (רק תמונות)
 app.use('/uploads', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   const allowedExt = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
   const path = require('path');
   const ext = path.extname(req.path).toLowerCase();
