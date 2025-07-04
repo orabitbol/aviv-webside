@@ -188,7 +188,10 @@ export default function AdminPanel() {
   const filterProducts = () => {
     let filtered = selectedProductCategory === 'all' 
       ? [...products] 
-      : products.filter(p => p.category_id === selectedProductCategory);
+      : products.filter(p => 
+          p.category_id === selectedProductCategory ||
+          String(p.category_id) === String(selectedProductCategory)
+        );
     setFilteredProducts(filtered);
     setProductsPage(1);
   };
@@ -511,12 +514,17 @@ export default function AdminPanel() {
                 <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>פעולות</TableHead><TableHead>סטטוס</TableHead><TableHead>מוצרים</TableHead><TableHead>שם</TableHead></TableRow></TableHeader><TableBody>
                   {Array.isArray(categories) && categories.map((c) => (<TableRow key={c._id || c.id}>
                     <TableCell>
-                      <Button variant="outline" size="sm" onClick={() => { setSelectedProductCategory(c.id); setActiveTab("products"); }}>
+                      <Button variant="outline" size="sm" onClick={() => { setSelectedProductCategory(c._id || c.id); setActiveTab("products"); }}>
                         הצג מוצרים
                       </Button>
                     </TableCell>
                     <TableCell><Badge variant={c.is_active ? 'default' : 'secondary'}>{c.is_active ? 'פעיל' : 'לא פעיל'}</Badge></TableCell>
-                    <TableCell>{products.filter(p => p.category_id === c.id).length}</TableCell>
+                    <TableCell>{products.filter(p => 
+                      p.category_id === c._id ||
+                      p.category_id === c.id ||
+                      String(p.category_id) === String(c._id) ||
+                      String(p.category_id) === String(c.id)
+                    ).length}</TableCell>
                     <TableCell className="font-medium">{c.name}</TableCell>
                   </TableRow>))}
                 </TableBody></Table></div>
