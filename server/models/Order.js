@@ -7,7 +7,8 @@ const orderSchema = new mongoose.Schema({
   phone: String,
   total: { type: Number, required: true },
   status: { type: String, default: 'pending' },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  order_number: { type: Number, required: true, unique: true, index: true },
 });
 
 module.exports = mongoose.model('Order', orderSchema); 

@@ -73,7 +73,6 @@ export default function Checkout() {
     if (isProcessing) return;
     setIsProcessing(true);
     try {
-      const orderNumber = `NH${Date.now().toString().slice(-6)}${Math.random().toString(36).substr(2, 3).toUpperCase()}`;
       const totalAmount = getTotalPrice() + 5.99;
       const orderData = {
         customerName: formData.customer_name,
@@ -81,8 +80,7 @@ export default function Checkout() {
         address: formData.shipping_address,
         phone: formData.customer_phone,
         total: totalAmount,
-        status: "pending",
-        order_number: orderNumber
+        status: "pending"
       };
       const orderItemsData = cartItems.map(item => ({
         product_id: item.product_id || item.id,
@@ -99,11 +97,12 @@ export default function Checkout() {
           items: orderItemsData
         })
       });
-      const order = await orderRes.json();
+      const orderResult = await orderRes.json();
+      const order = orderResult.order;
       localStorage.removeItem('cart');
       window.dispatchEvent(new Event('storage'));
       toast.success('ההזמנה בוצעה בהצלחה!');
-      navigate(createPageUrl(`OrderConfirmation?order=${orderNumber}`));
+      navigate(createPageUrl(`OrderConfirmation?order=${order.order_number}`));
     } catch (error) {
       console.error('שגיאה בעיבוד ההזמנה:', error);
       toast.error('שגיאה בעיבוד ההזמנה. אנא נסה שוב.');

@@ -43,7 +43,10 @@ router.get('/:id', requireAdmin, async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { items, ...orderData } = req.body;
-    const order = new Order(orderData);
+    // הפקת order_number רץ
+    const lastOrder = await Order.findOne({}, {}, { sort: { order_number: -1 } });
+    const nextOrderNumber = lastOrder && lastOrder.order_number ? lastOrder.order_number + 1 : 1;
+    const order = new Order({ ...orderData, order_number: nextOrderNumber });
     await order.save();
     let createdItems = [];
     if (Array.isArray(items) && items.length > 0) {

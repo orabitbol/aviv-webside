@@ -15,9 +15,10 @@ export default function OrderConfirmation() {
   useEffect(() => {
     const fetchOrder = async () => {
       try {
-        const res = await fetch(`/api/orders?order_number=${orderNumber}`);
+        const res = await fetch(`/api/orders`);
         const data = await res.json();
-        setOrder((data.data && data.data[0]) || null);
+        const found = (data.data || []).find(o => String(o.order_number) === String(orderNumber));
+        setOrder(found || null);
       } catch (error) {
         setOrder(null);
       } finally {
