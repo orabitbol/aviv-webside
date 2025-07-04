@@ -7,7 +7,8 @@ const orderItemSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   weight: { type: Number, required: true },
   unit_price: { type: Number, required: true },
-  product_name: { type: String }
+  product_name: { type: String },
+  total_price: { type: Number }
 });
 
 module.exports = mongoose.model('OrderItem', orderItemSchema); 

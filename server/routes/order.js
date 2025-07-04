@@ -74,13 +74,15 @@ router.post('/', [
           const unit_price = product.base_price; // מחיר ליחידת משקל (למשל ל-100 גרם)
           // Calculate total price for this item
           const price = (weight / product.base_weight) * product.base_price;
+          const total_price = (item.quantity || 1) * price;
           const orderItem = new OrderItem({
             ...item,
             order_id: order._id,
             weight,
             unit_price,
             price,
-            product_name: product.name
+            product_name: product.name,
+            total_price
           });
           await orderItem.save();
           return orderItem;
@@ -91,6 +93,9 @@ router.post('/', [
       }));
       createdItems = createdItems.filter(Boolean);
     }
+    const orderTotal = createdItems.reduce((sum, item) => sum + (item.total_price || 0), 0);
+    order.total = orderTotal;
+    await order.save();
     res.status(201).json({ order, items: createdItems });
   } catch (err) {
     console.error('שגיאה ביצירת הזמנה:', err.message, req.body);

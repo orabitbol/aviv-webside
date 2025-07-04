@@ -122,9 +122,15 @@ export default function OrderConfirmation() {
                       <td className="px-4 py-2 text-text">{item.quantity}</td>
                       <td className="px-4 py-2 text-text">{item.weight} גרם</td>
                       <td className="px-4 py-2 text-text">₪{item.unit_price?.toFixed(2)} / {item.product_id?.base_weight || 100} גרם</td>
-                      <td className="px-4 py-2 text-success font-bold">₪{item.price?.toFixed(2)}</td>
+                      <td className="px-4 py-2 text-success font-bold">₪{item.total_price?.toFixed(2)}</td>
                     </tr>
                   ))}
+                  {Array.isArray(items) && items.length > 0 && (
+                    <tr>
+                      <td colSpan={4} className="text-left font-bold">סה"כ להזמנה:</td>
+                      <td className="text-success font-bold">₪{order.total?.toFixed(2)}</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
