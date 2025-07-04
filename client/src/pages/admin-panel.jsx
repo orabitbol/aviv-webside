@@ -130,7 +130,7 @@ export default function AdminPanel() {
       if (from && to) {
         url += `&from=${from}&to=${to}`;
       }
-      const res = await fetch(url);
+      const res = await fetch(url, { credentials: "include" });
       const data = await res.json();
       const ordersArr = Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : []);
       setOrders(ordersArr);
@@ -146,8 +146,8 @@ export default function AdminPanel() {
   const loadData = async () => {
     try {
       const [productsRes, categoriesRes] = await Promise.all([
-        fetch(`${getApiBaseUrl()}/api/products?page=${productsPage}&limit=20`),
-        fetch(`${getApiBaseUrl()}/api/categories?page=${categoriesPage}&limit=20`)
+        fetch(`${getApiBaseUrl()}/api/products?page=${productsPage}&limit=20`, { credentials: "include" }),
+        fetch(`${getApiBaseUrl()}/api/categories?page=${categoriesPage}&limit=20`, { credentials: "include" })
       ]);
       const productsData = await productsRes.json();
       const categoriesData = await categoriesRes.json();
@@ -238,7 +238,7 @@ export default function AdminPanel() {
   const openOrderItemsModal = async (orderId) => {
     setOrderItemsModal({ open: true, items: [], loading: true, orderId });
     try {
-      const response = await fetch(`${getApiBaseUrl()}/api/order-items/order/${orderId}`);
+      const response = await fetch(`${getApiBaseUrl()}/api/order-items/order/${orderId}`, { credentials: "include" });
       const data = await response.json();
       setOrderItemsModal({ open: true, items: data, loading: false, orderId });
     } catch {
@@ -252,7 +252,8 @@ export default function AdminPanel() {
     await fetch(`${getApiBaseUrl()}/api/products/${productId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ is_active: false })
+      body: JSON.stringify({ is_active: false }),
+      credentials: "include"
     });
     loadData();
   };
@@ -261,14 +262,17 @@ export default function AdminPanel() {
     await fetch(`${getApiBaseUrl()}/api/products/${productId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ is_active: true })
+      body: JSON.stringify({ is_active: true }),
+      credentials: "include"
     });
     loadData();
   };
 
   const deleteProduct = async (productId) => {
     await fetch(`${getApiBaseUrl()}/api/products/${productId}`, {
-      method: "DELETE" });
+      method: "DELETE",
+      credentials: "include"
+    });
     loadData();
   };
 
@@ -607,7 +611,8 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId, setP
       await fetch(`${getApiBaseUrl()}/api/products`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        credentials: "include"
       });
       setOpen(false);
       setFormData({ name: "", description: "", category_id: "", image: "", is_active: true, base_weight: "", base_price: "", weight_step: "" });
@@ -754,7 +759,8 @@ function AddCategoryDialog({ onCategoryAdded, setCategoriesPage }) {
       await fetch(`${getApiBaseUrl()}/api/categories`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, slug, image_url: imageUrl })
+        body: JSON.stringify({ ...formData, slug, image_url: imageUrl }),
+        credentials: "include"
       });
       setOpen(false);
       setFormData({ name: "", description: "", slug: "", image_url: "", is_active: true });
@@ -868,7 +874,8 @@ function EditProductDialog({ product, categories, onProductUpdated }) {
       await fetch(`${getApiBaseUrl()}/api/products/${product._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        credentials: "include"
       });
       setOpen(false);
       onProductUpdated();
@@ -982,7 +989,8 @@ function EditCategoryDialog({ category, onCategoryUpdated }) {
       await fetch(`${getApiBaseUrl()}/api/categories/${category._id || category.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        credentials: "include"
       });
       setOpen(false);
       onCategoryUpdated();
