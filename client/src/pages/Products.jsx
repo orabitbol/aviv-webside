@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 // import { Badge } from "@/components/ui/badge";
 import { Search, ShoppingCart, Star, Plus, Minus } from "lucide-react";
 import { toast, Toaster } from "sonner";
+import { getApiBaseUrl } from "@/lib/utils";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -99,7 +100,7 @@ export default function Products() {
     const isOutOfStock = product.is_active === false;
     let imageSrc = product.image || product.image_url || 'https://images.unsplash.com/photo-1508747703725-719777637510?w=300&h=300&fit=crop&q=80';
     if (product.image && product.image.startsWith('/uploads')) {
-      imageSrc = `http://localhost:5000${product.image}`;
+      imageSrc = `${getApiBaseUrl()}${product.image}`;
     }
     return (
       <div className={`flex flex-col items-center p-6 transition-all duration-300 ${isOutOfStock ? 'opacity-60 grayscale' : ''} rounded-3xl`}

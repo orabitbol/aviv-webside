@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { createPageUrl, getApiBaseUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Star, Leaf, Shield, Truck } from "lucide-react";
@@ -119,25 +119,37 @@ export default function Homepage() {
           </div>
         ) : categories.length > 0 ? (
           <div className="flex justify-center flex-wrap gap-x-12 gap-y-8">
-            {categories.map((category) => (
-              <Link 
-                key={category.id} 
-                to={createPageUrl(`Products?category=${category.slug}`)}
-                className="group flex flex-col items-center gap-4 text-center w-40"
-              >
-                <div className="relative w-40 h-40">
-                  <img 
-                    src={category.image_url || `https://images.unsplash.com/photo-1508747703725-719777637510?w=300&h=300&fit=crop&q=80`}
-                    alt={category.name}
-                    className="w-full h-full object-cover rounded-full shadow-xl transition-all duration-300 group-hover:shadow-2xl group-hover:scale-105 border-4 border-surface"
-                  />
-                   <div className="absolute inset-0 bg-black/10 rounded-full group-hover:bg-black/0 transition-colors" />
-                </div>
-                <h3 className="text-xl font-semibold text-primary group-hover:text-accent transition-colors">
-                  {category.name}
-                </h3>
-              </Link>
-            ))}
+            {categories.map((category) => {
+              let imageSrc = category.image_url;
+              if (imageSrc && imageSrc.startsWith('/uploads')) {
+                imageSrc = `${getApiBaseUrl()}${imageSrc}`;
+              }
+              return (
+                <Link 
+                  key={category.id} 
+                  to={createPageUrl(`Products?category=${category.slug}`)}
+                  className="group flex flex-col items-center gap-4 text-center w-40"
+                >
+                  <div className="relative w-40 h-40">
+                    {imageSrc ? (
+                      <img 
+                        src={imageSrc}
+                        alt={category.name}
+                        className="w-full h-full object-cover rounded-full shadow-xl transition-all duration-300 group-hover:shadow-2xl group-hover:scale-105 border-4 border-surface"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center rounded-full bg-muted text-gray-400 text-4xl font-bold border-4 border-surface">
+                        ?
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/10 rounded-full group-hover:bg-black/0 transition-colors" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-primary group-hover:text-accent transition-colors">
+                    {category.name}
+                  </h3>
+                </Link>
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-12">

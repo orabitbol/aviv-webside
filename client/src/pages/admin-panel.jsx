@@ -13,6 +13,7 @@ import { Download, Plus, Search, ChevronLeft, ChevronRight, Edit } from "lucide-
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
 import { DatePicker } from "@/components/ui/datepicker";
+import { getApiBaseUrl } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -511,7 +512,7 @@ export default function AdminPanel() {
             <Card>
               <CardHeader><div className="flex justify-between items-center"><AddCategoryDialog onCategoryAdded={loadData} /><CardTitle>ניהול קטגוריות</CardTitle></div></CardHeader>
               <CardContent>
-                <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>פעולות</TableHead><TableHead>סטטוס</TableHead><TableHead>מוצרים</TableHead><TableHead>שם</TableHead></TableRow></TableHeader><TableBody>
+                <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>פעולות</TableHead><TableHead>סטטוס</TableHead><TableHead>מוצרים</TableHead><TableHead>שם</TableHead><TableHead>תמונה</TableHead></TableRow></TableHeader><TableBody>
                   {Array.isArray(categories) && categories.map((c) => (<TableRow key={c._id || c.id}>
                     <TableCell>
                       <Button variant="outline" size="sm" onClick={() => { setSelectedProductCategory(c._id || c.id); setActiveTab("products"); }}>
@@ -526,6 +527,18 @@ export default function AdminPanel() {
                       String(p.category_id) === String(c.id)
                     ).length}</TableCell>
                     <TableCell className="font-medium">{c.name}</TableCell>
+                    <TableCell>
+                      <div className="w-14 h-14 rounded-full overflow-hidden bg-white border-2 border-primary shadow flex items-center justify-center mx-auto">
+                        {c.image_url ? (
+                          <img src={c.image_url.startsWith('/uploads') ? `${getApiBaseUrl()}${c.image_url}` : c.image_url} alt={c.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="flex gap-2">
+                      <EditCategoryDialog category={c} onCategoryUpdated={loadData} />
+                    </TableCell>
                   </TableRow>))}
                 </TableBody></Table></div>
                 <Pagination currentPage={categoriesPage} totalItems={categories.length} onPageChange={setCategoriesPage} />
@@ -828,7 +841,7 @@ function EditProductDialog({ product, categories, onProductUpdated }) {
             <Label className="text-lg font-bold">תמונה</Label>
             <label htmlFor="edit-product-image-upload" className="flex flex-col items-center justify-center w-36 h-36 rounded-full border-4 border-primary bg-white shadow-lg cursor-pointer hover:bg-primary/10 transition group">
               {imagePreview ? (
-                <img src={imagePreview} alt="תצוגה מקדימה" className="w-full h-full object-cover rounded-full" />
+                <img src={imagePreview.startsWith('/uploads') ? `${getApiBaseUrl()}${imagePreview}` : imagePreview} alt="תצוגה מקדימה" className="w-full h-full object-cover rounded-full" />
               ) : (
                 <span className="flex flex-col items-center justify-center text-primary group-hover:text-accent">
                   <svg xmlns='http://www.w3.org/2000/svg' className="w-10 h-10 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5m0 0l5 5m-5-5v12" /></svg>
@@ -847,6 +860,118 @@ function EditProductDialog({ product, categories, onProductUpdated }) {
               <Button type="submit" className="rounded-full w-full text-lg font-bold bg-gradient-to-r from-primary to-accent hover:from-accent hover:to-primary text-white shadow-lg transition-all">שמור שינויים</Button>
             </div>
           </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditCategoryDialog({ category, onCategoryUpdated }) {
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState({ ...category });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(category.image_url || "");
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    setFormData({ ...category });
+    setImagePreview(category.image_url || "");
+    setImageFile(null);
+  }, [category, open]);
+
+  function makeSlug(str) {
+    return str
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+  }
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      let imageUrl = formData.image_url;
+      if (imageFile) {
+        setUploading(true);
+        const formDataImg = new FormData();
+        formDataImg.append('image', imageFile);
+        const res = await fetch('/api/categories/upload-image', {
+          method: 'POST',
+          body: formDataImg,
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'שגיאה בהעלאת תמונה');
+        imageUrl = data.imageUrl;
+        setUploading(false);
+      }
+      const slug = formData.slug ? makeSlug(formData.slug) : makeSlug(formData.name);
+      const payload = { ...formData, slug, image_url: imageUrl };
+      await fetch(`/api/categories/${category._id || category.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      setOpen(false);
+      onCategoryUpdated();
+    } catch (error) {
+      setUploading(false);
+      alert(error.message || 'שגיאה בעדכון קטגוריה');
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="secondary" className="flex items-center gap-1"><Edit className="w-4 h-4" />ערוך</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg rounded-3xl shadow-2xl bg-gradient-to-br from-white via-slate-50 to-primary/10 backdrop-blur-xl border border-primary/20 p-10" dir="rtl">
+        <DialogHeader>
+          <DialogTitle className="text-3xl font-extrabold text-primary mb-4 tracking-tight">עריכת קטגוריה</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-8 text-right">
+          <div className="flex flex-col md:flex-row gap-8 items-center">
+            <div className="flex flex-col gap-4 flex-1">
+              <Label htmlFor="name" className="text-lg font-bold">שם</Label>
+              <Input id="name" value={formData.name} onChange={handleInputChange} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
+              <Label htmlFor="description" className="text-lg font-bold">תיאור</Label>
+              <Textarea id="description" value={formData.description} onChange={handleInputChange} className="rounded-2xl text-lg px-6 py-3 shadow-sm min-h-[60px]"/>
+              <Label htmlFor="slug" className="text-lg font-bold">Slug (כתובת באנגלית)</Label>
+              <Input id="slug" value={formData.slug} onChange={handleInputChange} placeholder="נוצר אוטומטית מהשם" className="rounded-full text-lg px-6 py-3 shadow-sm"/>
+              <Label htmlFor="is_active" className="text-lg font-bold">סטטוס</Label>
+              <Select value={formData.is_active ? 'true' : 'false'} onValueChange={v => setFormData({...formData, is_active: v === 'true'})}>
+                <SelectTrigger className="rounded-full text-lg px-6 py-3 shadow-sm"><SelectValue /></SelectTrigger>
+                <SelectContent><SelectItem value="true">פעיל</SelectItem><SelectItem value="false">לא פעיל</SelectItem></SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-4 items-center">
+              <Label className="text-lg font-bold">תמונה</Label>
+              <label htmlFor="edit-category-image-upload" className="flex flex-col items-center justify-center w-36 h-36 rounded-full border-4 border-primary bg-white shadow-lg cursor-pointer hover:bg-primary/10 transition group">
+                {imagePreview ? (
+                  <img src={imagePreview.startsWith('/uploads') ? `${getApiBaseUrl()}${imagePreview}` : imagePreview} alt="תצוגה מקדימה" className="w-full h-full object-cover rounded-full" />
+                ) : (
+                  <span className="flex flex-col items-center justify-center text-primary group-hover:text-accent">
+                    <svg xmlns='http://www.w3.org/2000/svg' className="w-10 h-10 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5m0 0l5 5m-5-5v12" /></svg>
+                    <span className="font-bold">העלה תמונה</span>
+                  </span>
+                )}
+                <input id="edit-category-image-upload" type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+              </label>
+            </div>
+          </div>
+          <Button type="submit" className="rounded-full w-full text-lg font-bold bg-gradient-to-r from-primary to-accent hover:from-accent hover:to-primary text-white shadow-lg transition-all">שמור שינויים</Button>
         </form>
       </DialogContent>
     </Dialog>

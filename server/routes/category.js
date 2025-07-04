@@ -2,6 +2,20 @@ const express = require('express');
 const Category = require('../models/Category');
 const { requireAdmin } = require('../auth/middleware');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+
+// הגדרת multer לשמירת קבצים בתיקיית uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, '../uploads'));
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + '-' + file.originalname);
+  }
+});
+const upload = multer({ storage: storage });
 
 // Get all categories
 router.get('/', async (req, res) => {
@@ -55,6 +69,15 @@ router.delete('/:id', requireAdmin, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// העלאת תמונה לקטגוריה
+router.post('/upload-image', requireAdmin, upload.single('image'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+  const imageUrl = `/uploads/${req.file.filename}`;
+  res.json({ imageUrl });
 });
 
 module.exports = router; 
