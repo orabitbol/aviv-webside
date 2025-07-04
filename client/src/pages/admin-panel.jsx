@@ -101,7 +101,9 @@ export default function AdminPanel() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      loadOrders(ordersPage, dateRange[0].startDate, dateRange[0].endDate);
+      const from = dateRange[0].startDate ? new Date(dateRange[0].startDate).toISOString() : '';
+      const to = dateRange[0].endDate ? new Date(dateRange[0].endDate).toISOString() : '';
+      loadOrders(ordersPage, from, to);
       loadData();
     }
   }, [isAuthenticated, ordersPage, dateRange[0].startDate, dateRange[0].endDate]);
@@ -166,8 +168,8 @@ export default function AdminPanel() {
       setFilteredProducts(Array.isArray(productsData.data) ? productsData.data : []);
       setProductsPages(productsData.pages || 1);
       setCategoriesPages(categoriesData.pages || 1);
-    } catch (error) {
-      console.error('שגיאה בטעינת נתונים:', error);
+    } catch {
+      // שגיאה בטעינת נתונים
     }
   };
 
@@ -812,7 +814,9 @@ function AddCategoryDialog({ onCategoryAdded, setCategoriesPage }) {
       setImagePreview("");
       if (typeof setCategoriesPage === 'function') setCategoriesPage(1);
       if (typeof onCategoryAdded === 'function') onCategoryAdded();
-    } catch (e) { console.error('שגיאה בהוספת קטגוריה:', e); }
+    } catch {
+      // שגיאה בהוספת קטגוריה
+    }
   };
 
   return (
@@ -923,8 +927,8 @@ function EditProductDialog({ product, categories, onProductUpdated }) {
       });
       setOpen(false);
       onProductUpdated();
-    } catch (e) {
-      alert(e.message || 'שגיאה בעדכון מוצר');
+    } catch {
+      // שגיאה בעדכון מוצר
     }
   };
 
@@ -1038,8 +1042,8 @@ function EditCategoryDialog({ category, onCategoryUpdated }) {
       });
       setOpen(false);
       onCategoryUpdated();
-    } catch (e) {
-      alert(e.message || 'שגיאה בעדכון קטגוריה');
+    } catch {
+      // שגיאה בעדכון קטגוריה
     }
   };
 

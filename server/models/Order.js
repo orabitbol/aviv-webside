@@ -9,6 +9,8 @@ const orderSchema = new mongoose.Schema({
   status: { type: String, default: 'pending' },
   createdAt: { type: Date, default: Date.now },
   order_number: { type: Number, required: true, unique: true, index: true },
+}, {
+  timestamps: true
 });
 
 module.exports = mongoose.model('Order', orderSchema); 
