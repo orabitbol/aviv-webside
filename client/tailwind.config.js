@@ -10,7 +10,7 @@ module.exports = {
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		colors: {
-  			background: '#FFF8E1',
+  			background: '#F9F6F2',
   			foreground: 'hsl(var(--foreground))',
   			card: {
   				DEFAULT: 'hsl(var(--card))',
@@ -20,15 +20,15 @@ module.exports = {
   				DEFAULT: 'hsl(var(--popover))',
   				foreground: 'hsl(var(--popover-foreground))'
   			},
-  			primary: '#FFA726',
-  			secondary: '#66BB6A',
-  			muted: '#BDBDBD',
-  			accent: '#FFD54F',
+  			primary: '#7CB518',
+  			secondary: '#A47149',
+  			muted: '#A0A4A8',
+  			accent: '#FFE156',
   			destructive: {
   				DEFAULT: 'hsl(var(--destructive))',
   				foreground: 'hsl(var(--destructive-foreground))'
   			},
-  			border: '#E0E0E0',
+  			border: '#E5E7EB',
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',
   			chart: {
@@ -49,9 +49,9 @@ module.exports = {
   				ring: 'hsl(var(--sidebar-ring))'
   			},
   			surface: '#FFFFFF',
-  			text: '#333333',
-  			error: '#E57373',
-  			success: '#81C784',
+  			text: '#22292F',
+  			error: '#FF6B6B',
+  			success: '#A3E635',
   		},
   		keyframes: {
   			'accordion-down': {

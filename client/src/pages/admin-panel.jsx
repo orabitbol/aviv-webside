@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Download, Plus, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
+import { DatePicker } from "@/components/ui/datepicker";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -74,16 +75,20 @@ export default function AdminPanel() {
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
 
+  const [orderItemsModal, setOrderItemsModal] = useState({ open: false, items: [], loading: false, orderId: null });
+
+  const [dateRange, setDateRange] = useState({ from: '', to: '' });
+
   useEffect(() => {
     checkAuth();
   }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
-      loadOrders(ordersPage);
+      loadOrders(ordersPage, dateRange.from, dateRange.to);
       loadData();
     }
-  }, [isAuthenticated, ordersPage]);
+  }, [isAuthenticated, ordersPage, dateRange.from, dateRange.to]);
 
   useEffect(() => {
     filterOrders();
@@ -112,14 +117,19 @@ export default function AdminPanel() {
     }
   };
 
-  const loadOrders = async (page = 1) => {
+  const loadOrders = async (page = 1, from = '', to = '') => {
     setOrdersLoading(true);
     try {
-      const res = await fetch(`/api/orders?page=${page}&limit=20`);
+      let url = `/api/orders?page=${page}&limit=20`;
+      if (from && to) {
+        url += `&from=${from}&to=${to}`;
+      }
+      const res = await fetch(url);
       const data = await res.json();
-      setOrders(data.data);
-      setOrdersTotal(data.total);
-      setOrdersPages(data.pages);
+      const ordersArr = Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : []);
+      setOrders(ordersArr);
+      setOrdersTotal(data.total || ordersArr.length);
+      setOrdersPages(data.pages || 1);
     } catch (error) {
       setOrders([]);
       setOrdersTotal(0);
@@ -139,7 +149,8 @@ export default function AdminPanel() {
       const ordersData = await ordersRes.json();
       const productsData = await productsRes.json();
       const categoriesData = await categoriesRes.json();
-      setOrders(Array.isArray(ordersData) ? ordersData : []);
+      const ordersArr = Array.isArray(ordersData.data) ? ordersData.data : (Array.isArray(ordersData) ? ordersData : []);
+      setOrders(ordersArr);
       setProducts(productsData);
       setCategories(categoriesData);
       setFilteredProducts(productsData);
@@ -160,13 +171,13 @@ export default function AdminPanel() {
     if (statusFilter !== "all") {
       filtered = filtered.filter(o => o.status === statusFilter);
     }
-    if (dateFilter !== "all") {
-      const now = new Date();
-      const filterDate = new Date();
-      if (dateFilter === "today") filterDate.setHours(0,0,0,0);
-      else if (dateFilter === "week") filterDate.setDate(now.getDate() - 7);
-      else if (dateFilter === "month") filterDate.setMonth(now.getMonth() - 1);
-      filtered = filtered.filter(o => new Date(o.createdAt) >= filterDate);
+    if (dateRange.from && dateRange.to) {
+      const fromDate = new Date(dateRange.from);
+      const toDate = new Date(dateRange.to);
+      filtered = filtered.filter(o => {
+        const created = new Date(o.createdAt);
+        return created >= fromDate && created <= toDate;
+      });
     }
     setFilteredOrders(filtered);
     setOrdersPage(1);
@@ -224,6 +235,19 @@ export default function AdminPanel() {
     await fetch("/api/auth/logout", { credentials: "include" });
     window.location.reload();
   };
+
+  const openOrderItemsModal = async (orderId) => {
+    setOrderItemsModal({ open: true, items: [], loading: true, orderId });
+    try {
+      const res = await fetch(`/api/order-items/order/${orderId}`);
+      const data = await res.json();
+      setOrderItemsModal({ open: true, items: data, loading: false, orderId });
+    } catch {
+      setOrderItemsModal({ open: true, items: [], loading: false, orderId });
+    }
+  };
+
+  const closeOrderItemsModal = () => setOrderItemsModal({ open: false, items: [], loading: false, orderId: null });
 
   if (isLoading) {
     return (
@@ -287,13 +311,19 @@ export default function AdminPanel() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-col md:flex-row gap-4 mb-6">
+                <div className="flex flex-col md:flex-row gap-4 mb-6 items-center">
+                  <div className="flex gap-2 items-center">
+                    <span>מתאריך:</span>
+                    <input type="date" value={dateRange.from} onChange={e => setDateRange(r => ({ ...r, from: e.target.value }))} className="border rounded px-2 py-1" />
+                    <span>עד:</span>
+                    <input type="date" value={dateRange.to} onChange={e => setDateRange(r => ({ ...r, to: e.target.value }))} className="border rounded px-2 py-1" />
+                    <Button variant="ghost" size="sm" onClick={() => setDateRange({ from: '', to: '' })}>נקה</Button>
+                  </div>
                   <div className="relative flex-1">
                     <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input placeholder="חיפוש הזמנות..." value={ordersSearchTerm} onChange={(e) => setOrdersSearchTerm(e.target.value)} className="pr-10"/>
                   </div>
                   <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-40"><SelectValue placeholder="כל הסטטוסים" /></SelectTrigger><SelectContent><SelectItem value="all">כל הסטטוסים</SelectItem><SelectItem value="pending">ממתינה</SelectItem><SelectItem value="processing">בעיבוד</SelectItem><SelectItem value="shipped">נשלחה</SelectItem><SelectItem value="delivered">התקבלה</SelectItem><SelectItem value="cancelled">בוטלה</SelectItem></SelectContent></Select>
-                  <Select value={dateFilter} onValueChange={setDateFilter}><SelectTrigger className="w-40"><SelectValue placeholder="כל הזמנים" /></SelectTrigger><SelectContent><SelectItem value="all">כל הזמנים</SelectItem><SelectItem value="today">היום</SelectItem><SelectItem value="week">השבוע</SelectItem><SelectItem value="month">החודש</SelectItem></SelectContent></Select>
                 </div>
                 <div className="overflow-x-auto">
                   <Table>
@@ -325,7 +355,56 @@ export default function AdminPanel() {
                           <TableCell>{order.customerEmail}</TableCell>
                           <TableCell>{order.phone}</TableCell>
                           <TableCell>{order.address}</TableCell>
-                          <TableCell>—</TableCell> {/* כאן אפשר להוסיף סיכום מוצרים בהמשך */}
+                          <TableCell>
+                            <Dialog open={orderItemsModal.open && orderItemsModal.orderId === order._id} onOpenChange={v => !v && closeOrderItemsModal()}>
+                              <DialogTrigger asChild>
+                                <Button variant="outline" size="sm" onClick={() => openOrderItemsModal(order._id)}>
+                                  הצג
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl" dir="rtl">
+                                <DialogHeader>
+                                  <DialogTitle>מוצרים בהזמנה</DialogTitle>
+                                </DialogHeader>
+                                {orderItemsModal.loading ? (
+                                  <div className="text-center py-8">טוען...</div>
+                                ) : orderItemsModal.items.length === 0 ? (
+                                  <div className="text-center py-8">אין מוצרים להזמנה זו</div>
+                                ) : (
+                                  <div className="overflow-x-auto">
+                                    <table className="min-w-full rounded-xl overflow-hidden shadow border border-border">
+                                      <thead className="bg-background">
+                                        <tr>
+                                          <th className="px-4 py-2 text-right font-bold text-text">שם מוצר</th>
+                                          <th className="px-4 py-2 text-right font-bold text-text">כמות</th>
+                                          <th className="px-4 py-2 text-right font-bold text-text">מחיר ליחידה</th>
+                                          <th className="px-4 py-2 text-right font-bold text-text">סה"כ</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {orderItemsModal.items.map((item) => {
+                                          const product = products.find(p => p._id === item.product_id);
+                                          return (
+                                            <tr key={item._id || item.id} className="hover:bg-accent/10 transition">
+                                              <td className="px-4 py-2 text-text flex items-center gap-2">
+                                                {product && product.image_url && (
+                                                  <img src={product.image_url} alt={product.name} className="w-10 h-10 rounded-full object-cover border border-border shadow" />
+                                                )}
+                                                {product ? product.name : '—'}
+                                              </td>
+                                              <td className="px-4 py-2 text-text">{item.quantity}</td>
+                                              <td className="px-4 py-2 text-text">₪{item.price?.toFixed(2)}</td>
+                                              <td className="px-4 py-2 text-success font-bold">₪{(item.price * item.quantity).toFixed(2)}</td>
+                                            </tr>
+                                          );
+                                        })}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                )}
+                              </DialogContent>
+                            </Dialog>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

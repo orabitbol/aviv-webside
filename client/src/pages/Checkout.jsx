@@ -85,7 +85,7 @@ export default function Checkout() {
         order_number: orderNumber
       };
       const orderItemsData = cartItems.map(item => ({
-        product_id: item.id,
+        product_id: item.product_id || item.id,
         product_name: item.name,
         price: item.price,
         quantity: item.quantity,

@@ -1,6 +1,7 @@
 const express = require('express');
 const OrderItem = require('../models/OrderItem');
 const { requireAdmin } = require('../auth/middleware');
+const mongoose = require('mongoose');
 const router = express.Router();
 
 // Get all order items
@@ -16,7 +17,10 @@ router.get('/', async (req, res) => {
 // Get order items by order_id
 router.get('/order/:orderId', async (req, res) => {
   try {
-    const items = await OrderItem.find({ order_id: req.params.orderId });
+    const orderId = mongoose.Types.ObjectId.isValid(req.params.orderId)
+      ? new mongoose.Types.ObjectId(req.params.orderId)
+      : req.params.orderId;
+    const items = await OrderItem.find({ order_id: orderId });
     res.json(items);
   } catch (err) {
     res.status(500).json({ error: err.message });

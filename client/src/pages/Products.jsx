@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+// import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Search, ShoppingCart, Filter, Star } from "lucide-react";
+// import { Badge } from "@/components/ui/badge";
+import { Search, ShoppingCart, Star } from "lucide-react";
 import { toast, Toaster } from "sonner";
 
 export default function Products() {
@@ -76,12 +76,13 @@ export default function Products() {
 
   const addToCart = (product) => {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const existingItem = cart.find(item => item.id === product.id);
+    const productToCart = { ...product, product_id: product._id, id: product._id };
+    const existingItem = cart.find(item => item.product_id === product._id || item.id === product._id);
     
     if (existingItem) {
       existingItem.quantity += 1;
     } else {
-      cart.push({ ...product, quantity: 1 });
+      cart.push({ ...productToCart, quantity: 1 });
     }
     
     localStorage.setItem('cart', JSON.stringify(cart));
@@ -163,48 +164,28 @@ export default function Products() {
       {filteredProducts.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-12">
           {filteredProducts.map((product) => (
-            <Card key={product._id} className="group text-center flex flex-col items-center bg-surface/90 border-2 border-border shadow-xl hover:shadow-2xl transition-all duration-300 rounded-3xl p-4">
-              <div className="relative w-40 h-40 mb-4">
-                <img 
-                  src={product.image_url || `https://images.unsplash.com/photo-1508747703725-719777637510?w=300&h=300&fit=crop&q=80`}
+            <div key={product._id} className="flex flex-col items-center p-6 bg-transparent">
+              <div className="w-40 h-40 rounded-full overflow-hidden border-8 border-white shadow-lg bg-white flex items-center justify-center mb-4">
+                <img
+                  src={product.image_url || 'https://images.unsplash.com/photo-1508747703725-719777637510?w=300&h=300&fit=crop&q=80'}
                   alt={product.name}
-                  className="w-full h-full object-cover rounded-full shadow-xl transition-all duration-300 group-hover:shadow-2xl group-hover:scale-105 border-4 border-surface"
+                  className="w-full h-full object-cover"
                 />
-                {product.stock_quantity < 5 && product.stock_quantity > 0 && (
-                  <Badge variant="destructive" className="absolute top-2 left-2">אזל מהמלאי</Badge>
-                )}
               </div>
-              <div className="flex-grow flex flex-col items-center">
-                <h3 className="text-lg font-bold text-primary mb-1 group-hover:text-accent transition-colors">
-                  {product.name}
-                </h3>
-                <p className="text-muted text-sm mb-2 h-10 line-clamp-2">
-                  {product.description || "אגוזים וזרעים באיכות פרימיום"}
-                </p>
-                <div className="flex items-center justify-center gap-4 my-2">
-                  <span className="text-xs text-muted">{product.weight}</span>
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs text-muted ml-1">4.9</span>
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-3 h-3 fill-accent text-accent" />
-                    ))}
-                  </div>
-                </div>
+              <div className="text-xl font-bold text-primary mb-2">{product.name}</div>
+              <div className="text-muted text-sm mb-2">{product.description}</div>
+              <div className="flex items-center justify-center gap-2 mb-2">
               </div>
-              <div className="mt-auto w-full flex flex-col items-center gap-2">
-                <span className="text-xl font-bold text-success">
-                  ₪{product.price?.toFixed(2)}
-                </span>
-                <Button 
-                  size="sm" 
-                  onClick={() => addToCart(product)}
-                  className="w-full rounded-full bg-gradient-to-r from-primary to-accent hover:from-accent hover:to-primary text-white font-bold shadow-lg transition-all"
-                >
-                  <ShoppingCart className="ml-2 w-4 h-4" />
-                  הוסף לסל
-                </Button>
-              </div>
-            </Card>
+              <div className="text-lg font-bold text-success mb-2">₪{product.price?.toFixed(2)}</div>
+              <Button
+                size="sm"
+                onClick={() => addToCart(product)}
+                className="rounded-full bg-gradient-to-r from-primary to-accent hover:from-accent hover:to-primary text-white font-bold shadow-lg transition-all"
+              >
+                <ShoppingCart className="ml-2 w-4 h-4" />
+                הוסף לסל
+              </Button>
+            </div>
           ))}
         </div>
       ) : (

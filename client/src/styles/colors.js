@@ -2,16 +2,16 @@
 // קובץ מרכזי לניהול צבעי המותג
 
 const colors = {
-  primary: '#FFA726',      // כתום-צהוב עיקרי
-  secondary: '#66BB6A',    // ירוק משני
-  accent: '#FFD54F',       // צהוב בהיר
-  background: '#FFF8E1',   // רקע חום-בהיר
+  primary: '#7CB518',      // ירוק פיסטוק מודרני
+  secondary: '#A47149',    // חום אגוז טבעי
+  accent: '#FFE156',       // צהוב גרעין חמנייה
+  background: '#F9F6F2',   // בז' שומשום/רקע מודרני
   surface: '#FFFFFF',      // לבן
-  text: '#333333',         // טקסט כהה
-  muted: '#BDBDBD',        // אפור
-  border: '#E0E0E0',       // גבול
-  error: '#E57373',        // אדום שגיאה
-  success: '#81C784',      // ירוק הצלחה
+  text: '#22292F',         // טקסט כהה מודרני
+  muted: '#A0A4A8',        // אפור מודרני
+  border: '#E5E7EB',       // גבול בהיר
+  error: '#FF6B6B',        // אדום-ורוד עדין
+  success: '#A3E635',      // ירוק בהיר להצלחה
 };
 
 export default colors; 
