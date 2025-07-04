@@ -54,11 +54,10 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'secret',
   resave: false,
   saveUninitialized: false,
-  // Secure session cookie settings
   cookie: {
-    secure: process.env.NODE_ENV === 'production', // true only in production (HTTPS)
+    secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    sameSite: 'strict',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 1000 * 60 * 60 * 24
   }
 }));
