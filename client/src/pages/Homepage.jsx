@@ -141,7 +141,7 @@ export default function Homepage() {
                       <img 
                         src={imageSrc}
                         alt={category.name}
-                        style={{ width: 160, height: 160, border: '2px solid red' }}
+                        style={{ width: 160, height: 160 }}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center rounded-full bg-muted text-gray-400 text-4xl font-bold border-4 border-surface">
