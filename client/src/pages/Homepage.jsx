@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { createPageUrl, getApiBaseUrl } from "@/utils";
+import { createPageUrl } from "@/utils";
+import { getApiBaseUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Star, Leaf, Shield, Truck } from "lucide-react";
