@@ -112,7 +112,7 @@ export default function AdminPanel() {
 
   const checkAuth = async () => {
     try {
-      const res = await fetch("/api/auth/me", { credentials: "include" });
+      const res = await fetch(`${getApiBaseUrl()}/api/auth/me`, { credentials: "include" });
       if (!res.ok) throw new Error();
       const user = await res.json();
       setIsAuthenticated(user.isAdmin);
@@ -126,7 +126,7 @@ export default function AdminPanel() {
   const loadOrders = async (page = 1, from = '', to = '') => {
     setOrdersLoading(true);
     try {
-      let url = `/api/orders?page=${page}&limit=20`;
+      let url = `${getApiBaseUrl()}/api/orders?page=${page}&limit=20`;
       if (from && to) {
         url += `&from=${from}&to=${to}`;
       }
@@ -146,8 +146,8 @@ export default function AdminPanel() {
   const loadData = async () => {
     try {
       const [productsRes, categoriesRes] = await Promise.all([
-        fetch(`/api/products?page=${productsPage}&limit=20`),
-        fetch(`/api/categories?page=${categoriesPage}&limit=20`)
+        fetch(`${getApiBaseUrl()}/api/products?page=${productsPage}&limit=20`),
+        fetch(`${getApiBaseUrl()}/api/categories?page=${categoriesPage}&limit=20`)
       ]);
       const productsData = await productsRes.json();
       const categoriesData = await categoriesRes.json();
@@ -205,20 +205,22 @@ export default function AdminPanel() {
     e.preventDefault();
     setLoginError("");
     try {
-      const res = await fetch("/api/auth/login", {
+      const response = await fetch(`${getApiBaseUrl()}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ email: loginEmail, password: loginPassword })
       });
-      if (!res.ok) {
-        const data = await res.json();
-        setLoginError(data.error || "שגיאת התחברות");
+      if (!response.ok) {
+        const data = await response.json();
+        setLoginError(data.error || "שגיאה בהתחברות");
         return;
       }
-      window.location.reload();
-    } catch {
-      setLoginError("שגיאת התחברות");
+      setIsAuthenticated(true);
+      setLoginEmail("");
+      setLoginPassword("");
+    } catch (error) {
+      setLoginError("שגיאה בשרת. אנא נסה שוב.");
     }
   };
   
@@ -229,15 +231,15 @@ export default function AdminPanel() {
   };
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { credentials: "include" });
-    window.location.reload();
+    await fetch(`${getApiBaseUrl()}/api/auth/logout`, { credentials: "include" });
+    setIsAuthenticated(false);
   };
 
   const openOrderItemsModal = async (orderId) => {
     setOrderItemsModal({ open: true, items: [], loading: true, orderId });
     try {
-      const res = await fetch(`/api/order-items/order/${orderId}`);
-      const data = await res.json();
+      const response = await fetch(`${getApiBaseUrl()}/api/order-items/order/${orderId}`);
+      const data = await response.json();
       setOrderItemsModal({ open: true, items: data, loading: false, orderId });
     } catch {
       setOrderItemsModal({ open: true, items: [], loading: false, orderId });
@@ -247,26 +249,26 @@ export default function AdminPanel() {
   const closeOrderItemsModal = () => setOrderItemsModal({ open: false, items: [], loading: false, orderId: null });
 
   const markOutOfStock = async (productId) => {
-    await fetch(`/api/products/${productId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+    await fetch(`${getApiBaseUrl()}/api/products/${productId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ is_active: false })
     });
     loadData();
   };
 
   const returnToStock = async (productId) => {
-    await fetch(`/api/products/${productId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+    await fetch(`${getApiBaseUrl()}/api/products/${productId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ is_active: true })
     });
     loadData();
   };
 
   const deleteProduct = async (productId) => {
-    await fetch(`/api/products/${productId}`, {
-      method: 'DELETE' });
+    await fetch(`${getApiBaseUrl()}/api/products/${productId}`, {
+      method: "DELETE" });
     loadData();
   };
 
@@ -582,7 +584,7 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId, setP
       if (imageFile) {
         const formDataImg = new FormData();
         formDataImg.append('image', imageFile);
-        const res = await fetch('/api/products/upload-image', {
+        const res = await fetch(`${getApiBaseUrl()}/api/products/upload-image`, {
           method: 'POST',
           body: formDataImg,
           credentials: 'include'
@@ -602,7 +604,7 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId, setP
         base_price: Number(formData.base_price),
         weight_step: Number(formData.weight_step)
       };
-      await fetch(`/api/products`, {
+      await fetch(`${getApiBaseUrl()}/api/products`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -613,9 +615,9 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId, setP
       setImagePreview("");
       if (typeof setProductsPage === 'function') setProductsPage(1);
       onProductAdded();
-    } catch (error) { 
-      console.error('שגיאה בהוספת מוצר:', error); 
-      alert(error.message || 'שגיאה בהוספת מוצר');
+    } catch (e) { 
+      console.error('שגיאה בהוספת מוצר:', e); 
+      alert(e.message || 'שגיאה בהוספת מוצר');
     }
   };
 
@@ -735,7 +737,7 @@ function AddCategoryDialog({ onCategoryAdded, setCategoriesPage }) {
       if (imageFile) {
         const formDataImg = new FormData();
         formDataImg.append('image', imageFile);
-        const res = await fetch('/api/categories/upload-image', {
+        const res = await fetch(`${getApiBaseUrl()}/api/categories/upload-image`, {
           method: 'POST',
           body: formDataImg,
           credentials: 'include'
@@ -749,7 +751,7 @@ function AddCategoryDialog({ onCategoryAdded, setCategoriesPage }) {
         alert('לא ניתן ליצור כתובת באנגלית (slug) מהשם.');
         return;
       }
-      await fetch("/api/categories", {
+      await fetch(`${getApiBaseUrl()}/api/categories`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, slug, image_url: imageUrl })
@@ -760,7 +762,7 @@ function AddCategoryDialog({ onCategoryAdded, setCategoriesPage }) {
       setImagePreview("");
       if (typeof setCategoriesPage === 'function') setCategoriesPage(1);
       if (typeof onCategoryAdded === 'function') onCategoryAdded();
-    } catch (error) { console.error('שגיאה בהוספת קטגוריה:', error); }
+    } catch (e) { console.error('שגיאה בהוספת קטגוריה:', e); }
   };
 
   return (
@@ -843,7 +845,7 @@ function EditProductDialog({ product, categories, onProductUpdated }) {
       if (imageFile) {
         const formDataImg = new FormData();
         formDataImg.append('image', imageFile);
-        const res = await fetch('/api/products/upload-image', {
+        const res = await fetch(`${getApiBaseUrl()}/api/products/upload-image`, {
           method: 'POST',
           body: formDataImg,
           credentials: 'include'
@@ -863,15 +865,15 @@ function EditProductDialog({ product, categories, onProductUpdated }) {
         base_price: Number(formData.base_price),
         weight_step: Number(formData.weight_step)
       };
-      await fetch(`/api/products/${product._id}`, {
+      await fetch(`${getApiBaseUrl()}/api/products/${product._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
       setOpen(false);
       onProductUpdated();
-    } catch (error) {
-      alert(error.message || 'שגיאה בעדכון מוצר');
+    } catch (e) {
+      alert(e.message || 'שגיאה בעדכון מוצר');
     }
   };
 
@@ -966,7 +968,7 @@ function EditCategoryDialog({ category, onCategoryUpdated }) {
       if (imageFile) {
         const formDataImg = new FormData();
         formDataImg.append('image', imageFile);
-        const res = await fetch('/api/categories/upload-image', {
+        const res = await fetch(`${getApiBaseUrl()}/api/categories/upload-image`, {
           method: 'POST',
           body: formDataImg,
           credentials: 'include'
@@ -977,15 +979,15 @@ function EditCategoryDialog({ category, onCategoryUpdated }) {
       }
       const slug = formData.slug ? makeSlug(formData.slug) : makeSlug(formData.name);
       const payload = { ...formData, slug, image_url: imageUrl };
-      await fetch(`/api/categories/${category._id || category.id}`, {
+      await fetch(`${getApiBaseUrl()}/api/categories/${category._id || category.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
       setOpen(false);
       onCategoryUpdated();
-    } catch (error) {
-      alert(error.message || 'שגיאה בעדכון קטגוריה');
+    } catch (e) {
+      alert(e.message || 'שגיאה בעדכון קטגוריה');
     }
   };
 

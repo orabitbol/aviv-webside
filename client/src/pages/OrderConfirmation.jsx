@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { createPageUrl, getApiBaseUrl } from "@/utils";
 // import { OrderItem } from "@/api/entities"; // נמחק
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,8 +14,9 @@ export default function OrderConfirmation() {
 
   useEffect(() => {
     const fetchOrder = async () => {
+      setIsLoading(true);
       try {
-        const res = await fetch(`/api/orders`);
+        const res = await fetch(`${getApiBaseUrl()}/api/orders`);
         const data = await res.json();
         const found = (data.data || []).find(o => String(o.order_number) === String(orderNumber));
         setOrder(found || null);
@@ -31,12 +32,15 @@ export default function OrderConfirmation() {
   useEffect(() => {
     const fetchOrderItems = async () => {
       if (!order) return;
+      setIsLoading(true);
       try {
-        const res = await fetch(`/api/order-items/order/${order._id}`);
+        const res = await fetch(`${getApiBaseUrl()}/api/order-items/order/${order._id}`);
         const data = await res.json();
         setOrderItems(data);
       } catch (error) {
         setOrderItems([]);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchOrderItems();

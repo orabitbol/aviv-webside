@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { createPageUrl, getApiBaseUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -89,7 +89,7 @@ export default function Checkout() {
         quantity: item.quantity,
         subtotal: item.price * item.quantity
       }));
-      const orderRes = await fetch("/api/orders", {
+      const orderRes = await fetch(`${getApiBaseUrl()}/api/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

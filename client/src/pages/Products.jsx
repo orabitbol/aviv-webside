@@ -4,18 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 // import { Badge } from "@/components/ui/badge";
-import { Search, ShoppingCart, Star, Plus, Minus } from "lucide-react";
+import { Search, ShoppingCart, Plus, Minus } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { getApiBaseUrl } from "@/lib/utils";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
-  const [totalProducts, setTotalProducts] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
-  const [categories, setCategories] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("name");
@@ -28,12 +25,11 @@ export default function Products() {
 
   const loadData = async (page = 1) => {
     try {
-      let url = `/api/products?page=${page}&limit=${ITEMS_PER_PAGE}`;
+      let url = `${getApiBaseUrl()}/api/products?page=${page}&limit=${ITEMS_PER_PAGE}`;
       // אפשר להוסיף כאן פרמטרים לסינון/חיפוש בעתיד
       const res = await fetch(url);
       const data = await res.json();
       setProducts(data.data || []);
-      setTotalProducts(data.total || 0);
       setTotalPages(data.pages || 1);
     } catch (error) {
       console.error('שגיאה בטעינת נתונים:', error);
@@ -196,11 +192,6 @@ export default function Products() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">כל הקטגוריות</SelectItem>
-              {categories.map(category => (
-                <SelectItem key={category._id} value={category.slug}>
-                  {category.name}
-                </SelectItem>
-              ))}
             </SelectContent>
           </Select>
         </div>

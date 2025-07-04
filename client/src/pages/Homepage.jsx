@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { getApiBaseUrl } from "@/lib/utils";
@@ -8,7 +8,6 @@ import { ArrowLeft, Star, Leaf, Shield, Truck } from "lucide-react";
 
 export default function Homepage() {
   const [categories, setCategories] = useState([]);
-  const [totalCategories, setTotalCategories] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -21,10 +20,9 @@ export default function Homepage() {
 
   const loadCategories = async (page = 1) => {
     try {
-      const res = await fetch(`/api/categories?page=${page}&limit=${ITEMS_PER_PAGE}`);
+      const res = await fetch(`${getApiBaseUrl()}/api/categories?page=${page}&limit=${ITEMS_PER_PAGE}`);
       const data = await res.json();
       setCategories(data.data || []);
-      setTotalCategories(data.total || 0);
       setTotalPages(data.pages || 1);
     } catch (error) {
       console.error('שגיאה בטעינת קטגוריות:', error);
