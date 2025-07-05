@@ -317,7 +317,7 @@ export default function AdminPanel() {
 
   const markOutOfStock = async (productId) => {
     await fetch(`${getApiBaseUrl()}/api/products/${productId}`, {
-      method: "PATCH",
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ is_active: false }),
       credentials: "include"
@@ -327,7 +327,7 @@ export default function AdminPanel() {
 
   const returnToStock = async (productId) => {
     await fetch(`${getApiBaseUrl()}/api/products/${productId}`, {
-      method: "PATCH",
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ is_active: true }),
       credentials: "include"
