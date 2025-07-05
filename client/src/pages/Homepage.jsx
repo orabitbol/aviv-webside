@@ -5,6 +5,7 @@ import { getApiBaseUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Star, Leaf, Shield, Truck } from "lucide-react";
+import Logo from "../../assets/image/Logo.png";
 
 export default function Homepage() {
   const [categories, setCategories] = useState([]);
@@ -56,6 +57,7 @@ export default function Homepage() {
         <div className="absolute inset-0 bg-gradient-to-l from-primary/10 to-secondary/10" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
+            <img src={Logo} alt="NutHub Logo" className="mx-auto mb-6 w-72 h-72 object-contain" />
             <h1 className="text-4xl md:text-6xl font-bold text-text mb-6">
               ברוכים הבאים ל-
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary"> NutHub</span>
