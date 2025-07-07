@@ -41,11 +41,13 @@ app.use(limiter);
 // CORS - allow only your domain and localhost (adjust as needed)
 const allowedOrigins = [
   process.env.FRONTEND_URL_DEV,
-  process.env.FRONTEND_URL_PROD
+  process.env.FRONTEND_URL_PROD,
+  process.env.FRONTEND_URL_PROD2
 ].filter(Boolean);
 
 app.use(cors({
   origin: function(origin, callback) {
+    console.log('CORS request from:', origin);
     // allow requests with no origin (like mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) {
