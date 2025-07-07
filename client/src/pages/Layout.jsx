@@ -101,12 +101,12 @@ export default function Layout({ children, currentPageName }) {
           {/* Main Content */}
           <main className="flex-1">{children}</main>
 
-          {/* Floating WhatsApp Button */}
+          {/* Floating WhatsApp Button */}s
           <a
             href={`https://wa.me/${getPhoneNumber()}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="fixed z-50 bottom-6 right-6 md:bottom-8 md:right-8 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg flex items-center justify-center w-16 h-16 md:w-20 md:h-20 transition-all duration-200"
+            className="fixed z-50 bottom-4 right-6 md:bottom-3 md:right-8 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg flex items-center justify-center w-14 h-14 md:w-16 md:h-16 transition-all duration-200"
             aria-label="צ'אט וואטסאפ"
           >
             <FaWhatsapp className="w-10 h-10 md:w-12 md:h-12" />
@@ -119,8 +119,8 @@ export default function Layout({ children, currentPageName }) {
                 <div>
                   <h4 className="font-semibold mb-4">יצירת קשר</h4>
                   <div className="space-y-2 text-green-200 text-sm">
-                    <p>info@nuthub.com 📧</p>
-                    <p>(555) 123-4567 📞</p>
+                    <p>info@gmail.com 📧</p>
+                    <p>052-2178985 📞</p>
                     <p>משלוחים לאזור הדרום בלבד 📍</p>
                   </div>
                 </div>
@@ -165,7 +165,7 @@ export default function Layout({ children, currentPageName }) {
 
               <div className="border-t border-green-700 mt-8 pt-8 text-center text-green-200 text-sm">
                 <p>
-                  &copy; {new Date().getFullYear()} NutHub. כל הזכויות שמורות.
+                  &copy; {new Date().getFullYear()} APluss.co.il . כל הזכויות שמורות.
                 </p>
               </div>
             </div>
