@@ -5,6 +5,9 @@ const router = express.Router();
 const OrderItem = require('../models/OrderItem');
 const Product = require('../models/Product');
 const { body, validationResult } = require('express-validator');
+const { Resend } = require('resend');
+const resend = new Resend(process.env.RESEND_API_KEY);
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 
 // Get all orders (with pagination)
 router.get('/', requireAdmin, async (req, res) => {
@@ -61,6 +64,50 @@ router.post('/', [
     const nextOrderNumber = lastOrder && lastOrder.order_number ? lastOrder.order_number + 1 : 1;
     const order = new Order({ ...orderData, order_number: nextOrderNumber });
     await order.save();
+    // שליחת מייל ללקוח ולמנהל
+    console.log('--- Resend Email Debug ---');
+    console.log('RESEND_API_KEY exists:', !!process.env.RESEND_API_KEY);
+    console.log('ADMIN_EMAIL:', ADMIN_EMAIL);
+    console.log('Customer email:', order.customerEmail);
+    const orderHtml = `
+      <h2>אישור הזמנה - NutHub</h2>
+      <p>שלום ${order.customerName}, תודה על הזמנתך!</p>
+      <p><b>מספר הזמנה:</b> ${order.order_number}</p>
+      <p><b>כתובת:</b> ${order.address}</p>
+      <p><b>טלפון:</b> ${order.phone}</p>
+      <p><b>סכום לתשלום:</b> ₪${order.total.toFixed(2)}</p>
+      <h3>פרטי הזמנה:</h3>
+      <ul>
+        ${items.map(item => `<li>${item.product_name || item.name} - ${item.quantity} יח' - ${item.selectedWeight || item.weight || item.base_weight || 100} גרם - ₪${item.price}</li>`).join('')}
+      </ul>
+      <p>תודה שבחרת ב-NutHub!</p>
+    `;
+    // שלח ללקוח
+    try {
+      console.log('Sending email to customer:', order.customerEmail);
+      const customerRes = await resend.emails.send({
+        from: 'NutHub <onboarding@resend.dev>',
+        to: order.customerEmail,
+        subject: `אישור הזמנה - NutHub #${order.order_number}`,
+        html: orderHtml,
+      });
+      console.log('Resend response (customer):', customerRes);
+    } catch (err) {
+      console.error('שגיאה בשליחת מייל ללקוח:', err);
+    }
+    // שלח למנהל
+    try {
+      console.log('Sending email to admin:', ADMIN_EMAIL);
+      const adminRes = await resend.emails.send({
+        from: 'NutHub <onboarding@resend.dev>',
+        to: ADMIN_EMAIL,
+        subject: `התקבלה הזמנה חדשה - NutHub #${order.order_number}`,
+        html: orderHtml,
+      });
+      console.log('Resend response (admin):', adminRes);
+    } catch (err) {
+      console.error('שגיאה בשליחת מייל למנהל:', err);
+    }
     let createdItems = [];
     if (Array.isArray(items) && items.length > 0) {
       createdItems = await Promise.all(items.map(async (item, idx) => {
