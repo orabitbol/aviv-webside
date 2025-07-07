@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { getApiBaseUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -123,14 +123,14 @@ export default function Checkout() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="max-w-4xl mx-auto px-2 sm:px-6 lg:px-8 py-12 pb-32">
       <Toaster richColors />
       <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-text mb-4 text-center">
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">תשלום</span>
         </h1>
         {/* Step Indicator */}
-        <div className="flex items-center max-w-2xl mx-auto">
+        <div className="flex flex-col sm:flex-row items-center max-w-2xl mx-auto">
           {STEPS.map((s, index) => (
             <React.Fragment key={s.id}>
               <div className="flex flex-col items-center">
@@ -148,7 +148,7 @@ export default function Checkout() {
       </div>
 
       <Card className="border-2 border-border shadow-2xl bg-surface/90 backdrop-blur-md rounded-2xl">
-        <CardContent className="p-8 text-right">
+        <CardContent className="p-4 sm:p-8 text-right">
           {step === 1 && (
             <div className="space-y-4">
               <h2 className="text-xl font-bold">פרטי משלוח</h2>

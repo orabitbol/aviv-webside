@@ -30,7 +30,7 @@ export default function OrderConfirmation() {
   const total = order.total || (subtotal + shipping);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-right">
+    <div className="max-w-4xl mx-auto px-2 sm:px-6 lg:px-8 py-12 pb-32 text-right">
       {/* Success Header */}
       <div className="text-center mb-8">
         <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -54,8 +54,8 @@ export default function OrderConfirmation() {
               <Package className="w-5 h-5 text-accent" />
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 gap-6">
+          <CardContent className="p-4 sm:p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                <div>
                 <h3 className="font-semibold text-text mb-2">פרטי לקוח</h3>
                 <div className="space-y-1 text-sm">
@@ -90,8 +90,8 @@ export default function OrderConfirmation() {
               <MapPin className="w-5 h-5 text-success" />
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 gap-6">
+          <CardContent className="p-4 sm:p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <h3 className="font-semibold text-text mb-2">פרטי הזמנה</h3>
                 <div className="text-sm text-muted">
@@ -107,7 +107,7 @@ export default function OrderConfirmation() {
           <CardHeader>
             <CardTitle className="text-primary">פריטים בהזמנה</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-2 sm:p-8">
             <div className="overflow-x-auto">
               <table className="min-w-full rounded-xl overflow-hidden shadow border border-border">
                 <thead className="bg-background">

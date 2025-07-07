@@ -87,18 +87,18 @@ export default function Cart() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="max-w-6xl mx-auto px-2 sm:px-6 lg:px-8 py-12 pb-32">
       <Toaster richColors />
       <div className="mb-8 text-right">
         <h1 className="text-3xl md:text-4xl font-bold text-text mb-4">
           סל <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">קניות</span>
         </h1>
         <p className="text-lg text-muted">
-          {getTotalItems()} פריטים בסל שלך
+          {getTotalItems()}פריטים בסל שלך
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Order Summary */}
         <div className="lg:col-span-1 lg:order-last">
           <Card className="border-2 border-border shadow-xl bg-surface/90 backdrop-blur-md rounded-2xl sticky top-24">
@@ -143,7 +143,7 @@ export default function Cart() {
             return (
               <div
                 key={getItemKey(item)}
-                className="flex items-center justify-between gap-6 p-6 pt-12 bg-white rounded-3xl shadow-lg border border-gray-200 relative"
+                className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 p-4 sm:p-6 pt-12 bg-white rounded-3xl shadow-lg border border-gray-200 relative"
               >
                 {/* כפתור מחיקה בפינה העליונה-שמאלית */}
                 <button
@@ -154,9 +154,9 @@ export default function Cart() {
                   <Trash2 className="w-6 h-6 text-red-400" />
                 </button>
                 {/* עמודה: תמונה + שם מוצר */}
-                <div className="flex flex-col items-center w-32 flex-shrink-0">
-                  <span className="text-lg font-bold text-primary mb-2">{item.name}</span>
-                  <div className="w-24 h-24 rounded-full overflow-hidden shadow">
+                <div className="flex flex-col items-center w-24 sm:w-32 flex-shrink-0">
+                  <span className="text-base sm:text-lg font-bold text-primary mb-2">{item.name}</span>
+                  <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full overflow-hidden shadow">
                     <img
                       src={item.image_url || `https://images.unsplash.com/photo-1508747703725-719777637510?w=100&h=100&fit=crop&q=80`}
                       alt={item.name}
@@ -165,50 +165,27 @@ export default function Cart() {
                   </div>
                 </div>
                 {/* עמודה: שינוי כמות */}
-                <div className="flex flex-col items-center min-w-[120px]">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      onClick={() => updateQuantity(item.id, item.selectedWeight || item.weight, item.quantity - 1)}
-                      disabled={item.quantity <= 1}
-                      className="w-10 h-10 rounded-full border-2 border-primary text-primary text-xl flex items-center justify-center hover:bg-primary hover:text-white transition"
-                      aria-label='הפחת כמות'
-                    >
-                      <Minus className="w-5 h-5" />
-                    </Button>
-                    <span className="text-xl font-bold mx-2">{item.quantity}</span>
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      onClick={() => updateQuantity(item.id, item.selectedWeight || item.weight, item.quantity + 1)}
-                      className="w-10 h-10 rounded-full border-2 border-primary text-primary text-xl flex items-center justify-center hover:bg-primary hover:text-white transition"
-                      aria-label='הוסף כמות'
-                    >
-                      <Plus className="w-5 h-5" />
-                    </Button>
-                  </div>
-                </div>
+
                 {/* עמודה: עמודה: שינוי משקל */}
-                <div className="flex flex-col items-center min-w-[180px]">
-                  <div className="flex items-center gap-4">
+                <div className="flex flex-col items-center min-w-[120px] sm:min-w-[180px]">
+                  <div className="flex items-center gap-2 sm:gap-4">
                     <Button
                       size="icon"
                       variant="outline"
                       onClick={() => updateWeight(item.id, item.selectedWeight || item.weight, Math.max(minWeight, (item.selectedWeight || item.weight) - step))}
                       disabled={(item.selectedWeight || item.weight) <= minWeight}
-                      className="w-14 h-14 rounded-full border-2 border-primary text-primary text-2xl flex items-center justify-center hover:bg-primary hover:text-white transition"
+                      className="w-10 h-10 sm:w-14 sm:h-14 rounded-full border-2 border-primary text-primary text-2xl flex items-center justify-center hover:bg-primary hover:text-white transition"
                       aria-label="הפחת משקל"
                     >
                       <Minus className="w-6 h-6" />
                     </Button>
-                    <span className="text-2xl font-extrabold text-gray-900 mx-2">{item.selectedWeight ? item.selectedWeight : item.weight}</span>
-                    <span className="text-lg font-bold text-gray-500">גרם</span>
+                    <span className="text-lg sm:text-2xl font-extrabold text-gray-900 mx-2">{item.selectedWeight ? item.selectedWeight : item.weight}</span>
+                    <span className="text-sm sm:text-lg font-bold text-gray-500">גרם</span>
                     <Button
                       size="icon"
                       variant="outline"
                       onClick={() => updateWeight(item.id, item.selectedWeight || item.weight, (item.selectedWeight || item.weight) + step)}
-                      className="w-14 h-14 rounded-full border-2 border-primary text-primary text-2xl flex items-center justify-center hover:bg-primary hover:text-white transition"
+                      className="w-10 h-10 sm:w-14 sm:h-14 rounded-full border-2 border-primary text-primary text-2xl flex items-center justify-center hover:bg-primary hover:text-white transition"
                       aria-label="הוסף משקל"
                     >
                       <Plus className="w-6 h-6" />
@@ -216,9 +193,9 @@ export default function Cart() {
                   </div>
                 </div>
                 {/* עמודה: מחיר כולל */}
-                <div className="flex flex-col items-end min-w-[110px]">
-                  <span>מחיר</span>
-                  <span className="text-xl font-extrabold text-primary">₪{item.price?.toFixed(2)}</span>
+                <div className="flex flex-col items-end min-w-[90px] sm:min-w-[110px]">
+                  <span className="text-xs sm:text-base">מחיר</span>
+                  <span className="text-lg sm:text-xl font-extrabold text-primary">₪{item.price?.toFixed(2)}</span>
                 </div>
               </div>
             );
