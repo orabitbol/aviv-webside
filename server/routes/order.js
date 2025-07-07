@@ -251,4 +251,58 @@ router.delete('/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// סטטיסטיקות למנהל
+router.get('/stats', requireAdmin, async (req, res) => {
+  try {
+    const { from, to } = req.query;
+    const match = {};
+    if (from && to) {
+      match.createdAt = {
+        $gte: new Date(from),
+        $lte: new Date(to)
+      };
+    }
+    // שלוף את כל ההזמנות בטווח
+    const orders = await Order.find(match);
+    const totalSales = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+    const totalOrders = orders.length;
+    // פילוח יומי
+    const daily = {};
+    orders.forEach(order => {
+      const day = order.createdAt.toISOString().slice(0, 10);
+      if (!daily[day]) daily[day] = { sales: 0, orders: 0 };
+      daily[day].sales += order.total || 0;
+      daily[day].orders += 1;
+    });
+    // פילוח חודשי
+    const monthly = {};
+    orders.forEach(order => {
+      const month = order.createdAt.toISOString().slice(0, 7);
+      if (!monthly[month]) monthly[month] = { sales: 0, orders: 0 };
+      monthly[month].sales += order.total || 0;
+      monthly[month].orders += 1;
+    });
+    // ממוצע הזמנה
+    const avgOrder = totalOrders > 0 ? (totalSales / totalOrders) : 0;
+    // הזמנה הכי גבוהה
+    const maxOrder = orders.reduce((max, o) => o.total > max ? o.total : max, 0);
+    // הזמנה הכי נמוכה
+    const minOrder = orders.reduce((min, o) => (o.total < min ? o.total : min), totalOrders > 0 ? orders[0].total : 0);
+    // הזמנה אחרונה
+    const lastOrder = orders.sort((a, b) => b.createdAt - a.createdAt)[0];
+    res.json({
+      totalSales,
+      totalOrders,
+      avgOrder,
+      maxOrder,
+      minOrder,
+      lastOrder,
+      daily,
+      monthly
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router; 

@@ -1,7 +1,7 @@
 export function redirectToHypPayment({ amount, orderId }) {
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = 'https://cguat.creditguard.co.il/xpo/Relay'; 
+    form.action = 'https://hyp.co.il/'; 
   
     const params = {
       terminalNumber: '0010322115',

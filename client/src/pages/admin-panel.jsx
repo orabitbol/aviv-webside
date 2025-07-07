@@ -70,6 +70,8 @@ export default function AdminPanel() {
   const [isLoading, setIsLoading] = useState(true);
   
   const [activeTab, setActiveTab] = useState("orders");
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(false);
 
   const [orders, setOrders] = useState([]);
   const [ordersPage, setOrdersPage] = useState(1);
@@ -377,6 +379,34 @@ export default function AdminPanel() {
     cancelled: <Ban className="w-4 h-4 mr-1 inline" />
   };
 
+  // טעינת סטטיסטיקות
+  const loadStats = async () => {
+    setStatsLoading(true);
+    try {
+      const from = dateRange[0].startDate ? new Date(dateRange[0].startDate).toISOString() : '';
+      let to = dateRange[0].endDate ? new Date(dateRange[0].endDate) : '';
+      if (to) {
+        to.setHours(23, 59, 59, 999);
+        to = to.toISOString();
+      }
+      let url = `${getApiBaseUrl()}/api/orders/stats`;
+      if (from && to) url += `?from=${from}&to=${to}`;
+      const res = await fetch(url, { credentials: "include" });
+      const data = await res.json();
+      setStats(data);
+    } catch {
+      setStats(null);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'stats') {
+      loadStats();
+    }
+  }, [activeTab, dateRange[0].startDate, dateRange[0].endDate]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -421,10 +451,11 @@ export default function AdminPanel() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="orders">הזמנות</TabsTrigger>
             <TabsTrigger value="products">מוצרים</TabsTrigger>
             <TabsTrigger value="categories">קטגוריות</TabsTrigger>
+            <TabsTrigger value="stats">סטטיסטיקות</TabsTrigger>
           </TabsList>
 
           <TabsContent value="orders">
@@ -702,6 +733,49 @@ export default function AdminPanel() {
                 <Pagination currentPage={categoriesPage} totalItems={categoriesPages * 20} onPageChange={p => { setCategoriesPage(p); loadData(); }} />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="stats">
+            <div className="mb-6 flex flex-col sm:flex-row gap-4 items-center justify-between">
+              <h2 className="text-2xl font-bold text-primary">סטטיסטיקות</h2>
+              <div>
+                <DateRange
+                  ranges={dateRange}
+                  onChange={item => setDateRange([item.selection])}
+                  locale={he}
+                  showMonthAndYearPickers={true}
+                  direction="rtl"
+                  rangeColors={["#38a169"]}
+                  className="shadow rounded-xl border border-border"
+                />
+              </div>
+            </div>
+            {statsLoading ? (
+              <ModernLoader text="טוען סטטיסטיקות..." />
+            ) : stats ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <Card className="bg-gradient-to-r from-primary to-accent text-white shadow-xl">
+                  <CardContent className="p-6">
+                    <div className="text-3xl font-bold">₪{stats.totalSales?.toLocaleString()}</div>
+                    <div className="text-lg">סה"כ מכירות</div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white shadow-xl">
+                  <CardContent className="p-6">
+                    <div className="text-3xl font-bold">{stats.totalOrders?.toLocaleString()}</div>
+                    <div className="text-lg">סה"כ משלוחים</div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-gradient-to-r from-accent to-primary text-white shadow-xl">
+                  <CardContent className="p-6">
+                    <div className="text-3xl font-bold">₪{stats.avgOrder?.toFixed(2)}</div>
+                    <div className="text-lg">ממוצע להזמנה</div>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <div className="text-center text-muted">אין נתונים להצגה.</div>
+            )}
           </TabsContent>
         </Tabs>
 
