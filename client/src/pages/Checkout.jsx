@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { getApiBaseUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { CreditCard, MapPin, Check, ArrowRight, ArrowLeft } from "lucide-react";
 import { toast, Toaster } from "sonner";
-import { FaCreditCard, FaBoxOpen } from 'react-icons/fa';
+import { FaCreditCard } from 'react-icons/fa';
 import { SiBit } from 'react-icons/si';
+import { redirectToHypPayment } from '../payment/PayCard';
 
 const SOUTHERN_CITIES = [
   "באר שבע", "אילת", "ערד", "דימונה", "נתיבות", "אופקים", "שדרות", "אשקלון", "אשדוד", "קריית גת", "קריית מלאכי"
@@ -23,6 +24,8 @@ const STEPS = [
   { id: 2, name: "תשלום", icon: CreditCard },
   { id: 3, name: "אישור", icon: Check }
 ];
+
+
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -77,6 +80,14 @@ export default function Checkout() {
     setIsProcessing(true);
     try {
       const totalAmount = getTotalPrice() + 5.99;
+      if (formData.payment_method === 'credit_card') {
+        // צור מזהה הזמנה ייחודי (אפשר להשתמש ב-timestamp או uuid)
+        const orderId = Date.now();
+        redirectToHypPayment({ amount: totalAmount, orderId });
+        setIsProcessing(false);
+        return;
+      }
+      // BIT או שאר אמצעי תשלום - המשך התנהגות רגילה
       const orderData = {
         customerName: formData.customer_name,
         customerEmail: formData.customer_email,
@@ -232,9 +243,9 @@ export default function Checkout() {
               ))}
               <Separator />
               <div className="text-left space-y-2">
-                <p>₪{getTotalPrice().toFixed(2)} :סה"כ ביניים</p>
+                <p>₪{getTotalPrice().toFixed(2)} :סה&quot;כ ביניים</p>
                 <p>₪5.99 :משלוח</p>
-                <p className="text-lg font-bold"><span className="text-green-600">₪{(getTotalPrice() + 5.99).toFixed(2)}</span> :סה"כ</p>
+                <p className="text-lg font-bold"><span className="text-green-600">₪{(getTotalPrice() + 5.99).toFixed(2)}</span> :סה&quot;כ</p>
               </div>
             </div>
           )}
