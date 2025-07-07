@@ -109,7 +109,7 @@ export default function Products() {
               >
                 <Minus className="w-6 h-6" />
               </button>
-              <span className="text-lg font-bold">{selectedWeight} גרם</span>
+              <span className="text-lg font-bold text-center">{selectedWeight} גרם</span>
               <button
                 className="w-14 h-14 rounded-full border-2 border-primary text-primary text-2xl flex items-center justify-center hover:bg-primary hover:text-white transition"
                 onClick={() => setSelectedWeight(w => w + step)}
