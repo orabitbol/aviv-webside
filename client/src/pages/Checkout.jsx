@@ -170,46 +170,40 @@ export default function Checkout() {
           )}
 
           {step === 2 && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold">אמצעי תשלום</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-6">
-                {[
-                  {
-                    value: 'Credit Card',
-                    label: 'כרטיס אשראי',
-                    icon: <FaCreditCard className="w-10 h-10 text-primary mx-auto" />,
-                    desc: 'תשלום מאובטח בכרטיס אשראי',
-                  },
-                  {
-                    value: 'Bit',
-                    label: 'Bit',
-                    icon: <SiBit className="w-10 h-10 text-blue-500 mx-auto" />,
-                    desc: 'תשלום מהיר דרך אפליקציית Bit',
-                  },
-                  {
-                    value: 'PayBox',
-                    label: 'PayBox',
-                    icon: <FaBoxOpen className="w-10 h-10 text-green-500 mx-auto" />,
-                    desc: 'תשלום קל דרך PayBox',
-                  },
-                ].map(opt => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => handleInputChange('payment_method', opt.value)}
-                    className={`group w-full rounded-2xl border-2 p-6 flex flex-col items-center shadow-lg transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50
-                      ${formData.payment_method === opt.value ? 'border-primary bg-primary/10 scale-105 shadow-2xl' : 'border-border bg-white hover:bg-primary/5'}`}
-                  >
-                    {opt.icon}
-                    <div className="mt-4 text-lg font-bold text-primary group-hover:text-accent">{opt.label}</div>
-                    <div className="text-sm text-muted mt-2">{opt.desc}</div>
-                    {formData.payment_method === opt.value && (
-                      <div className="mt-4 text-green-600 font-bold flex items-center gap-2"><Check className="w-5 h-5" />נבחר</div>
-                    )}
-                  </button>
-                ))}
+            <div className="space-y-6">
+              <h2 className="text-xl font-bold mb-4">בחר אמצעי תשלום</h2>
+              <div className="flex flex-col sm:flex-row gap-4">
+                {/* סליקת אשראי */}
+                <button
+                  type="button"
+                  className={`flex-1 flex flex-col items-center justify-center border-2 rounded-2xl p-6 shadow transition-all cursor-pointer ${formData.payment_method === 'credit_card' ? 'border-primary bg-primary/10' : 'border-border bg-white hover:bg-primary/5'}`}
+                  onClick={() => handleInputChange('payment_method', 'credit_card')}
+                >
+                  <FaCreditCard className="w-8 h-8 mb-2 text-primary" />
+                  <span className="font-bold text-lg">סליקת אשראי</span>
+                  <span className="text-xs text-muted">Visa, Mastercard, Isracard</span>
+                </button>
+                {/* Bit */}
+                <button
+                  type="button"
+                  className={`flex-1 flex flex-col items-center justify-center border-2 rounded-2xl p-6 shadow transition-all cursor-pointer ${formData.payment_method === 'bit' ? 'border-blue-500 bg-blue-50' : 'border-border bg-white hover:bg-blue-50'}`}
+                  onClick={() => handleInputChange('payment_method', 'bit')}
+                >
+                  <SiBit className="w-8 h-8 mb-2 text-blue-500" />
+                  <span className="font-bold text-lg">Bit</span>
+                  <span className="text-xs text-muted">תשלום מהיר בביט</span>
+                </button>
+                {/* PayPal (בעתיד) */}
+                <button
+                  type="button"
+                  className="flex-1 flex flex-col items-center justify-center border-2 rounded-2xl p-6 shadow bg-gray-100 border-gray-300 cursor-not-allowed opacity-60"
+                  disabled
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-8 h-8 mb-2 text-gray-400"><path fill="currentColor" d="M27.5 7.5c-1.2-1.5-3.2-2.3-6-2.3H10.2c-.7 0-1.3.5-1.4 1.2L5.1 27.1c-.1.4.2.8.6.8h5.2l1.1-6.7v.1c.1-.7.7-1.2 1.4-1.2h2.9c5.1 0 9-2.1 10.1-8.1.3-1.7.1-3.1-.7-4z"/></svg>
+                  <span className="font-bold text-lg">PayPal</span>
+                  <span className="text-xs text-muted">(בקרוב)</span>
+                </button>
               </div>
-              <div><Label htmlFor="notes">הערות להזמנה (אופציונלי)</Label><Textarea id="notes" value={formData.notes} onChange={(e) => handleInputChange('notes', e.target.value)} /></div>
             </div>
           )}
 
