@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Download, Plus, Search, ChevronLeft, ChevronRight, Edit } from "lucide-react";
+import { Download, Plus, Search, ChevronLeft, ChevronRight, Edit, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
 import { getApiBaseUrl } from "@/lib/utils";
@@ -106,6 +106,7 @@ export default function AdminPanel() {
   const [loginError, setLoginError] = useState("");
 
   const [orderItemsModal, setOrderItemsModal] = useState({ open: false, items: [], loading: false, orderId: null });
+  const [showStatsDatePicker, setShowStatsDatePicker] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -737,18 +738,25 @@ export default function AdminPanel() {
 
           <TabsContent value="stats">
             <div className="mb-6 flex flex-col sm:flex-row gap-4 items-center justify-between">
-              <h2 className="text-2xl font-bold text-primary">סטטיסטיקות</h2>
-              <div>
-                <DateRange
-                  ranges={dateRange}
-                  onChange={item => setDateRange([item.selection])}
-                  locale={he}
-                  showMonthAndYearPickers={true}
-                  direction="rtl"
-                  rangeColors={["#38a169"]}
-                  className="shadow rounded-xl border border-border"
-                />
+              <div className="flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-primary">סטטיסטיקות</h2>
+                <Button variant="outline" size="icon" onClick={() => setShowStatsDatePicker(v => !v)} className="border-primary">
+                  <Calendar className="w-5 h-5 text-primary" />
+                </Button>
               </div>
+              {showStatsDatePicker && (
+                <div>
+                  <DateRange
+                    ranges={dateRange}
+                    onChange={item => setDateRange([item.selection])}
+                    locale={he}
+                    showMonthAndYearPickers={true}
+                    direction="rtl"
+                    rangeColors={["#38a169"]}
+                    className="shadow rounded-xl border border-border"
+                  />
+                </div>
+              )}
             </div>
             {statsLoading ? (
               <ModernLoader text="טוען סטטיסטיקות..." />
