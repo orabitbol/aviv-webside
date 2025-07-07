@@ -57,6 +57,7 @@ router.post('/', [
   body('weight_step').isNumeric().withMessage('Weight step must be a number'),
   body('description').optional().trim().escape(),
   body('image').optional().trim(),
+  body('discountPrice').optional().isNumeric().withMessage('Discount price must be a number'),
 ], requireAdmin, async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -84,6 +85,7 @@ router.put('/:id', [
   body('weight_step').optional().isNumeric().withMessage('Weight step must be a number'),
   body('description').optional().trim().escape(),
   body('image').optional().trim(),
+  body('discountPrice').optional().isNumeric().withMessage('Discount price must be a number'),
 ], requireAdmin, async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {

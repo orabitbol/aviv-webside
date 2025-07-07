@@ -118,10 +118,19 @@ export default function Products() {
                 <Plus className="w-6 h-6" />
               </button>
             </div>
-            <div className="text-lg font-bold text-success mb-2">₪{price} ל-{selectedWeight} גרם</div>
+            {/* מחיר רגיל ומחיר הנחה */}
+            {product.discountPrice ? (
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg font-bold text-gray-400 line-through">₪{((product.base_price || 0) * (selectedWeight / (product.base_weight || 100))).toFixed(2)}</span>
+                <span className="text-xl font-extrabold text-success">₪{(product.discountPrice * (selectedWeight / (product.base_weight || 100))).toFixed(2)}</span>
+                <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 font-bold">מבצע</span>
+              </div>
+            ) : (
+              <div className="text-lg font-bold text-success mb-2">₪{price} ל-{selectedWeight} גרם</div>
+            )}
             <Button
               size="sm"
-              onClick={() => addToCart({ ...product, selectedWeight, price: Number(price) })}
+              onClick={() => addToCart({ ...product, selectedWeight, price: Number(product.discountPrice ? (product.discountPrice * (selectedWeight / (product.base_weight || 100))).toFixed(2) : price) })}
               className="rounded-full bg-gradient-to-r from-primary to-accent hover:from-accent hover:to-primary text-white font-bold shadow-lg transition-all"
             >
               <ShoppingCart className="ml-2 w-4 h-4" />

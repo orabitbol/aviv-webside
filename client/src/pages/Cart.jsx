@@ -195,7 +195,15 @@ export default function Cart() {
                 {/* עמודה: מחיר כולל */}
                 <div className="flex flex-col items-end min-w-[90px] sm:min-w-[110px]">
                   <span className="text-xs sm:text-base">מחיר</span>
-                  <span className="text-lg sm:text-xl font-extrabold text-primary">₪{item.price?.toFixed(2)}</span>
+                  {item.discountPrice ? (
+                    <span className="flex flex-col items-end">
+                      <span className="text-sm text-gray-400 line-through">₪{item.oldPrice?.toFixed(2) || item.base_price?.toFixed(2)}</span>
+                      <span className="text-lg sm:text-xl font-extrabold text-success">₪{item.price?.toFixed(2)}</span>
+                      <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 font-bold mt-1">מבצע</span>
+                    </span>
+                  ) : (
+                    <span className="text-lg sm:text-xl font-extrabold text-primary">₪{item.price?.toFixed(2)}</span>
+                  )}
                 </div>
               </div>
             );

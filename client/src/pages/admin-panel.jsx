@@ -679,7 +679,17 @@ export default function AdminPanel() {
                         <Badge variant="secondary" className="bg-yellow-400 text-black">נגמר המלאי</Badge>
                       )}
                     </TableCell>
-                    <TableCell>₪{p.price?.toFixed(2)}</TableCell>
+                    <TableCell>
+                      {p.discountPrice ? (
+                        <span className="flex flex-col items-end">
+                          <span className="text-xs text-gray-400 line-through">₪{p.price?.toFixed(2)}</span>
+                          <span className="text-lg font-extrabold text-success">₪{p.discountPrice?.toFixed(2)}</span>
+                          <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 font-bold mt-1">מבצע</span>
+                        </span>
+                      ) : (
+                        <span className="text-lg font-bold text-primary">₪{p.price?.toFixed(2)}</span>
+                      )}
+                    </TableCell>
                     <TableCell>{(Array.isArray(categories) ? categories : []).find(c => c._id === p.category_id || c.id === p.category_id)?.name || 'לא ידוע'}</TableCell>
                     <TableCell className="font-medium">{p.name}</TableCell>
                     <TableCell className="flex gap-2">
@@ -794,7 +804,7 @@ export default function AdminPanel() {
 
 function AddProductDialog({ categories, onProductAdded, selectedCategoryId, setProductsPage }) {
   const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState({ name: "", description: "", category_id: selectedCategoryId || "", image: "", is_active: true, base_weight: "", base_price: "", weight_step: "" });
+  const [formData, setFormData] = useState({ name: "", description: "", category_id: selectedCategoryId || "", image: "", is_active: true, base_weight: "", base_price: "", weight_step: "", discountPrice: "" });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
   const [showPreview, setShowPreview] = useState(false);
@@ -839,7 +849,8 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId, setP
         is_active: formData.is_active,
         base_weight: Number(formData.base_weight),
         base_price: Number(formData.base_price),
-        weight_step: Number(formData.weight_step)
+        weight_step: Number(formData.weight_step),
+        discountPrice: formData.discountPrice ? Number(formData.discountPrice) : undefined
       };
       await fetch(`${getApiBaseUrl()}/api/products`, {
         method: "POST",
@@ -848,7 +859,7 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId, setP
         credentials: "include"
       });
       setOpen(false);
-      setFormData({ name: "", description: "", category_id: "", image: "", is_active: true, base_weight: "", base_price: "", weight_step: "" });
+      setFormData({ name: "", description: "", category_id: "", image: "", is_active: true, base_weight: "", base_price: "", weight_step: "", discountPrice: "" });
       setImageFile(null);
       setImagePreview("");
       if (typeof setProductsPage === 'function') setProductsPage(1);
@@ -903,6 +914,8 @@ function AddProductDialog({ categories, onProductAdded, selectedCategoryId, setP
               <SelectTrigger className="rounded-full text-lg px-6 py-3 shadow-sm"><SelectValue placeholder="בחר קטגוריה" /></SelectTrigger>
               <SelectContent>{(Array.isArray(categories) ? categories : []).map(c => <SelectItem key={c._id || c.id} value={c._id || c.id}>{c.name}</SelectItem>)}</SelectContent>
             </Select>
+            <Label htmlFor="discountPrice" className="text-lg font-bold">מחיר מבצע (לא חובה)</Label>
+            <Input id="discountPrice" type="number" step="0.01" value={formData.discountPrice} onChange={(e) => setFormData({...formData, discountPrice: e.target.value})} className="rounded-full text-lg px-6 py-3 shadow-sm" placeholder="אם יש הנחה - מלא כאן"/>
           </div>
           <div className="flex flex-col gap-6 items-center justify-between">
             <Label className="text-lg font-bold">תמונה</Label>
@@ -1055,7 +1068,8 @@ function EditProductDialog({ product, categories, onProductUpdated }) {
     ...product,
     base_weight: product.base_weight !== undefined ? String(product.base_weight) : "",
     base_price: product.base_price !== undefined ? String(product.base_price) : "",
-    weight_step: product.weight_step !== undefined ? String(product.weight_step) : ""
+    weight_step: product.weight_step !== undefined ? String(product.weight_step) : "",
+    discountPrice: product.discountPrice !== undefined ? String(product.discountPrice) : ""
   });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(product.image || "");
@@ -1065,7 +1079,8 @@ function EditProductDialog({ product, categories, onProductUpdated }) {
       ...product,
       base_weight: product.base_weight !== undefined ? String(product.base_weight) : "",
       base_price: product.base_price !== undefined ? String(product.base_price) : "",
-      weight_step: product.weight_step !== undefined ? String(product.weight_step) : ""
+      weight_step: product.weight_step !== undefined ? String(product.weight_step) : "",
+      discountPrice: product.discountPrice !== undefined ? String(product.discountPrice) : ""
     });
     setImagePreview(product.image || "");
     setImageFile(null);
@@ -1104,7 +1119,8 @@ function EditProductDialog({ product, categories, onProductUpdated }) {
         is_active: formData.is_active,
         base_weight: Number(formData.base_weight),
         base_price: Number(formData.base_price),
-        weight_step: Number(formData.weight_step)
+        weight_step: Number(formData.weight_step),
+        discountPrice: formData.discountPrice ? Number(formData.discountPrice) : undefined
       };
       await fetch(`${getApiBaseUrl()}/api/products/${product._id}`, {
         method: "PUT",
@@ -1159,6 +1175,8 @@ function EditProductDialog({ product, categories, onProductUpdated }) {
             <Input id="base_price" type="number" step="0.01" value={formData.base_price} onChange={(e) => setFormData({...formData, base_price: e.target.value})} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
             <Label htmlFor="weight_step" className="text-lg font-bold">קפיצת משקל (גרם)</Label>
             <Input id="weight_step" type="number" value={formData.weight_step} onChange={(e) => setFormData({...formData, weight_step: e.target.value})} required className="rounded-full text-lg px-6 py-3 shadow-sm"/>
+            <Label htmlFor="edit-discountPrice" className="text-lg font-bold">מחיר מבצע (לא חובה)</Label>
+            <Input id="edit-discountPrice" type="number" step="0.01" value={formData.discountPrice} onChange={(e) => setFormData({...formData, discountPrice: e.target.value})} className="rounded-full text-lg px-6 py-3 shadow-sm" placeholder="אם יש הנחה - מלא כאן"/>
             <div className="flex gap-4 mt-4 w-full">
               <Button type="submit" className="rounded-full w-full text-lg font-bold bg-gradient-to-r from-primary to-accent hover:from-accent hover:to-primary text-white shadow-lg transition-all">שמור שינויים</Button>
             </div>
