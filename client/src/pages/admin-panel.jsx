@@ -739,10 +739,7 @@ export default function AdminPanel() {
           <TabsContent value="stats">
             <div className="mb-6 flex flex-col sm:flex-row gap-4 items-center justify-between">
               <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-bold text-primary">סטטיסטיקות</h2>
-                <Button variant="outline" size="icon" onClick={() => setShowStatsDatePicker(v => !v)} className="border-primary">
-                  <Calendar className="w-5 h-5 text-primary" />
-                </Button>
+                <h2 className="text-2xl font-bold text-primary rtl">סטטיסטיקות</h2>
               </div>
               {showStatsDatePicker && (
                 <div>
