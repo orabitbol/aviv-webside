@@ -250,14 +250,34 @@ export default function Checkout() {
              {step < 3 ? (
               <Button onClick={handleNextStep} className="bg-gradient-to-r from-primary to-accent text-white rounded-full">הבא <ArrowLeft className="w-4 h-4 mr-2" /></Button>
             ) : (
-              <Button onClick={handleSubmit} disabled={isProcessing} className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full">
-                {isProcessing ? 'מעבד...' : 'בצע הזמנה'}
+              <Button onClick={handleSubmit} disabled={isProcessing} className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full relative overflow-hidden min-w-[140px] min-h-[48px]">
+                {isProcessing ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                    </svg>
+                    מעבד...
+                  </span>
+                ) : 'בצע הזמנה'}
               </Button>
             )}
             {step > 1 ? (
               <Button variant="outline" onClick={handlePrevStep} className="rounded-full">חזור<ArrowRight className="w-4 h-4 ml-2" /></Button>
             ) : <div />}
           </div>
+          {isProcessing && step === 3 && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+              <div className="bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center gap-4 border-2 border-primary animate-fade-in">
+                <svg className="animate-spin h-12 w-12 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+                <div className="text-lg font-bold text-primary">מעבד את ההזמנה שלך...</div>
+                <div className="text-muted">אנא המתן מספר שניות</div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

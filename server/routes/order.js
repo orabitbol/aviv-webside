@@ -59,28 +59,90 @@ router.post('/', [
   }
   try {
     const { items, ...orderData } = req.body;
-    // הפקת order_number רץ
+
     const lastOrder = await Order.findOne({}, {}, { sort: { order_number: -1 } });
     const nextOrderNumber = lastOrder && lastOrder.order_number ? lastOrder.order_number + 1 : 1;
     const order = new Order({ ...orderData, order_number: nextOrderNumber });
     await order.save();
-    // שליחת מייל ללקוח ולמנהל
-    console.log('--- Resend Email Debug ---');
-    console.log('RESEND_API_KEY exists:', !!process.env.RESEND_API_KEY);
-    console.log('ADMIN_EMAIL:', ADMIN_EMAIL);
-    console.log('Customer email:', order.customerEmail);
+
     const orderHtml = `
-      <h2>אישור הזמנה - NutHub</h2>
-      <p>שלום ${order.customerName}, תודה על הזמנתך!</p>
-      <p><b>מספר הזמנה:</b> ${order.order_number}</p>
-      <p><b>כתובת:</b> ${order.address}</p>
-      <p><b>טלפון:</b> ${order.phone}</p>
-      <p><b>סכום לתשלום:</b> ₪${order.total.toFixed(2)}</p>
-      <h3>פרטי הזמנה:</h3>
-      <ul>
-        ${items.map(item => `<li>${item.product_name || item.name} - ${item.quantity} יח' - ${item.selectedWeight || item.weight || item.base_weight || 100} גרם - ₪${item.price}</li>`).join('')}
-      </ul>
-      <p>תודה שבחרת ב-NutHub!</p>
+      <div style="font-family: 'Segoe UI', Arial, sans-serif; background: #f7fafc; padding: 0; margin: 0;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background: #f7fafc; padding: 0; margin: 0;">
+          <tr>
+            <td align="center">
+              <table width="600" cellpadding="0" cellspacing="0" style="background: #fff; border-radius: 18px; box-shadow: 0 4px 24px #0001; margin: 32px 0; padding: 0;">
+                <tr>
+                  <td align="center" style="padding: 32px 0 0 0;">
+                    <img src="https://agalapitz.co.il/logo.png" alt="פיצוחי העגלה" width="80" style="border-radius: 50%; box-shadow: 0 2px 8px #0002; margin-bottom: 16px;" />
+                    <h1 style="font-size: 2rem; color: #1a202c; margin: 0 0 8px 0;">אישור הזמנה</h1>
+                    <div style="font-size: 1.1rem; color: #38a169; font-weight: bold; margin-bottom: 12px;">ההזמנה שלך התקבלה בהצלחה!</div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 0 32px 24px 32px;">
+                    <div style="background: #f0fff4; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: right;">
+                      <div style="font-size: 1.1rem; color: #2d3748; margin-bottom: 4px;"><b>שלום ${order.customerName},</b></div>
+                      <div style="color: #4a5568;">תודה שבחרת בפיצוחי העגלה! להלן פרטי ההזמנה שלך:</div>
+                    </div>
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-bottom: 24px;">
+                      <tr>
+                        <td style="padding: 8px 0; color: #718096; font-weight: bold;">מספר הזמנה:</td>
+                        <td style="padding: 8px 0; color: #2d3748;">${order.order_number}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #718096; font-weight: bold;">כתובת:</td>
+                        <td style="padding: 8px 0; color: #2d3748;">${order.address}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #718096; font-weight: bold;">טלפון:</td>
+                        <td style="padding: 8px 0; color: #2d3748;">${order.phone}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #718096; font-weight: bold;">דוא"ל:</td>
+                        <td style="padding: 8px 0; color: #2d3748;">${order.customerEmail}</td>
+                      </tr>
+                    </table>
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; background: #f7fafc; border-radius: 12px; overflow: hidden;">
+                      <thead>
+                        <tr style="background: #38a169; color: #fff;">
+                          <th style="padding: 12px; text-align: right;">מוצר</th>
+                          <th style="padding: 12px; text-align: right;">כמות</th>
+                          <th style="padding: 12px; text-align: right;">גרמים</th>
+                          <th style="padding: 12px; text-align: right;">מחיר ל-100 גרם</th>
+                          <th style="padding: 12px; text-align: right;">סה"כ</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${items.map(item => `
+                          <tr style="background: #fff; border-bottom: 1px solid #e2e8f0;">
+                            <td style="padding: 10px 8px; color: #2d3748; font-weight: 500;">${item.product_name || item.name}</td>
+                            <td style="padding: 10px 8px; color: #2d3748;">${item.quantity}</td>
+                            <td style="padding: 10px 8px; color: #2d3748;">${item.selectedWeight || item.weight || item.base_weight || 100} גרם</td>
+                            <td style="padding: 10px 8px; color: #2d3748;">₪${item.price} / ${item.base_weight || 100} גרם</td>
+                            <td style="padding: 10px 8px; color: #38a169; font-weight: bold;">₪${(item.price * item.quantity).toFixed(2)}</td>
+                          </tr>
+                        `).join('')}
+                        <tr style="background: #f0fff4;">
+                          <td colspan="4" style="padding: 12px 8px; text-align: left; font-weight: bold; color: #2d3748;">סה"כ לתשלום (כולל משלוח):</td>
+                          <td style="padding: 12px 8px; color: #38a169; font-weight: bold; font-size: 1.1rem;">₪${order.total.toFixed(2)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <div style="margin-top: 24px; background: #e6fffa; border-radius: 8px; padding: 16px; color: #319795; text-align: right;">
+                      <b>הערה:</b> מייל זה מהווה אישור הזמנה בלבד. נציג יחזור אליך לאישור סופי ותיאום משלוח.
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding: 24px 0 32px 0; color: #a0aec0; font-size: 0.95rem;">
+                    פיצוחי העגלה | agalapitz.co.il
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </div>
     `;
     // שלח ללקוח
     try {
@@ -88,7 +150,7 @@ router.post('/', [
       const customerRes = await resend.emails.send({
         from: 'פיצוחי העגלה <noreply@agalapitz.co.il>',
         to: order.customerEmail,
-        subject: `אישור הזמנה - NutHub #${order.order_number}`,
+        subject: `אישור הזמנה  #${order.order_number}`,
         html: orderHtml,
       });
       console.log('Resend response (customer):', customerRes);
@@ -101,7 +163,7 @@ router.post('/', [
       const adminRes = await resend.emails.send({
         from: 'פיצוחי העגלה <noreply@agalapitz.co.il>',
         to: ADMIN_EMAIL,
-        subject: `התקבלה הזמנה חדשה - NutHub #${order.order_number}`,
+        subject: `התקבלה הזמנה חדשה #${order.order_number}`,
         html: orderHtml,
       });
       console.log('Resend response (admin):', adminRes);
