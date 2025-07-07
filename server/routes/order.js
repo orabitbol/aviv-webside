@@ -86,7 +86,7 @@ router.post('/', [
     try {
       console.log('Sending email to customer:', order.customerEmail);
       const customerRes = await resend.emails.send({
-        from: 'NutHub <onboarding@resend.dev>',
+        from: 'פיצוחי העגלה <noreply@agalapitz.co.il>',
         to: order.customerEmail,
         subject: `אישור הזמנה - NutHub #${order.order_number}`,
         html: orderHtml,
@@ -99,7 +99,7 @@ router.post('/', [
     try {
       console.log('Sending email to admin:', ADMIN_EMAIL);
       const adminRes = await resend.emails.send({
-        from: 'NutHub <onboarding@resend.dev>',
+        from: 'פיצוחי העגלה <noreply@agalapitz.co.il>',
         to: ADMIN_EMAIL,
         subject: `התקבלה הזמנה חדשה - NutHub #${order.order_number}`,
         html: orderHtml,
