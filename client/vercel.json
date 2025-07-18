@@ -11,7 +11,6 @@
     }
   ],
 
-  /* ① rewrites – מגיש את הקובץ ישירות כשמגיעים ב‑HTTP */
   "rewrites": [
     {
       "source": "/.well-known/apple-developer-merchantid-domain-association",
@@ -20,7 +19,6 @@
     }
   ],
 
-  /* ② redirect כללי – כל שאר ה‑HTTP ממשיך להיפנות ל‑HTTPS */
   "redirects": [
     {
       "source": "/(.*)",
