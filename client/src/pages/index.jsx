@@ -10,6 +10,8 @@ import Checkout from "./Checkout";
 
 import OrderConfirmation from "./OrderConfirmation";
 
+import PaymentError from "./payment-error";
+
 import AdminPanel from "./admin-panel";
 
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
@@ -64,6 +66,7 @@ function PagesContent() {
                 <Route path="/Checkout" element={<Checkout />} />
                 
                 <Route path="/OrderConfirmation" element={<OrderConfirmation />} />
+                <Route path="/payment-error" element={<PaymentError />} />
                 
                 <Route path="/admin-panel" element={<AdminPanel />} />
                 

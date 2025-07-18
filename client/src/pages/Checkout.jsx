@@ -83,7 +83,13 @@ export default function Checkout() {
       if (formData.payment_method === 'credit_card') {
         // צור מזהה הזמנה ייחודי (אפשר להשתמש ב-timestamp או uuid)
         const orderId = Date.now();
-        redirectToHypPayment({ amount: totalAmount, orderId });
+        redirectToHypPayment({
+          amount: totalAmount,
+          orderId,
+          customerName: formData.customer_name,
+          customerId: formData.customer_phone || '000000000',
+          info: 'רכישה באתר',
+        });
         setIsProcessing(false);
         return;
       }
