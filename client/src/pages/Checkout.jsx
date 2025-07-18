@@ -210,15 +210,16 @@ export default function Checkout() {
                   <span className="font-bold text-lg">Bit</span>
                   <span className="text-xs text-muted">תשלום מהיר בביט</span>
                 </button>
-                {/* PayPal (בעתיד) */}
+                {/* Apple Pay (בקרוב) */}
                 <button
                   type="button"
                   className="flex-1 flex flex-col items-center justify-center border-2 rounded-2xl p-6 shadow bg-gray-100 border-gray-300 cursor-not-allowed opacity-60"
                   disabled
+                  // onClick={() => handleInputChange('payment_method', 'apple_pay')}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-8 h-8 mb-2 text-gray-400"><path fill="currentColor" d="M27.5 7.5c-1.2-1.5-3.2-2.3-6-2.3H10.2c-.7 0-1.3.5-1.4 1.2L5.1 27.1c-.1.4.2.8.6.8h5.2l1.1-6.7v.1c.1-.7.7-1.2 1.4-1.2h2.9c5.1 0 9-2.1 10.1-8.1.3-1.7.1-3.1-.7-4z"/></svg>
-                  <span className="font-bold text-lg">PayPal</span>
-                  <span className="text-xs text-muted">(בקרוב)</span>
+                  <img src="https://developer.apple.com/design/human-interface-guidelines/apple-pay/images/apple-pay-mark.svg" alt="Apple Pay" className="w-8 h-8 mb-2" />
+                  <span className="font-bold text-lg">Apple Pay</span>
+                  <span className="text-xs text-muted">יתאפשר בקרוב</span>
                 </button>
               </div>
             </div>
