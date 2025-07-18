@@ -13,18 +13,23 @@
 
   "rewrites": [
     {
-      "source": "/.well-known/apple-developer-merchantid-domain-association",
-      "destination": "/.well-known/apple-developer-merchantid-domain-association",
-      "has": [{ "type": "protocol", "value": "http" }]
+      "source": "/.well-known/:path*",
+      "destination": "/.well-known/:path*",
+      "has": [
+        { "type": "header", "key": "x-forwarded-proto", "value": "http" }
+      ]
     }
   ],
+
 
   "redirects": [
     {
       "source": "/(.*)",
       "destination": "https://agalapitz.co.il/$1",
       "permanent": true,
-      "has": [{ "type": "protocol", "value": "http" }]
+      "has": [
+        { "type": "header", "key": "x-forwarded-proto", "value": "http" }
+      ]
     }
   ]
 }
