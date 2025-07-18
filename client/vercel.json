@@ -1,22 +1,29 @@
-
 {
-
   "headers": [
     {
       "source": "/.well-known/apple-developer-merchantid-domain-association",
       "headers": [
-        { "key": "Content-Type", "value": "text/plain" }
+        { "key": "Content-Type", "value": "text/plain" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,OPTIONS,PUT,DELETE,PATCH" }
+      ]
+    },
+    {
+      "source": "/.well-known/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,OPTIONS,PUT,DELETE,PATCH" }
       ]
     }
   ],
 
   "rewrites": [
-
     {
       "source": "/.well-known/:path*",
       "destination": "/.well-known/:path*"
     },
-
     {
       "source": "/(.*)",
       "destination": "/"
