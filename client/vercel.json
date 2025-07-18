@@ -1,5 +1,25 @@
+
 {
+
+  "headers": [
+    {
+      "source": "/.well-known/apple-developer-merchantid-domain-association",
+      "headers": [
+        { "key": "Content-Type", "value": "text/plain" }
+      ]
+    }
+  ],
+
   "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
+
+    {
+      "source": "/.well-known/:path*",
+      "destination": "/.well-known/:path*"
+    },
+
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
   ]
-} 
+}
