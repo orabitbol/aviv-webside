@@ -10,6 +10,7 @@ export function redirectToHypPayment({
   passP = '',
   successUrl = '',
   errorUrl = '',
+  authType = 'referrer', // חדש: סוג אימות ('passp' או 'referrer')
   ...rest
 }) {
   // מומלץ להגדיר ב-.env: VITE_TERMINAL_NUMBER, VITE_HYP_PASSWORD, VITE_HYP_SUCCESS_URL, VITE_HYP_ERROR_URL
@@ -18,10 +19,11 @@ export function redirectToHypPayment({
   form.method = 'POST';
   form.action = formAction;
 
-  const params = {
+  // הגדרת טיפוס גנרי ל-params כדי לאפשר הוספת PassP דינמית
+  const params: Record<string, any> = {
     action: 'pay',
     Masof: masof || import.meta.env.VITE_TERMINAL_NUMBER || '',
-    PassP: passP || import.meta.env.VITE_HYP_PASSWORD || '',
+    REFERRER:"yaad.net",
     Amount: amount,
     Info: info,
     UTF8: 'True',

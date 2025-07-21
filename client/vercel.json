@@ -6,19 +6,19 @@
         { "key": "Content-Type", "value": "text/plain" },
         { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
         { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,OPTIONS,PUT,DELETE,PATCH" }
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET,POST,OPTIONS,PUT,DELETE,PATCH"
+        }
       ]
     }
   ],
-
 
   "rewrites": [
     {
       "source": "/.well-known/:path*",
       "destination": "/.well-known/:path*",
-      "has": [
-        { "type": "header", "key": "x-forwarded-proto", "value": "http" }
-      ]
+      "has": [{ "type": "header", "key": "x-forwarded-proto", "value": "http" }]
     },
     {
       "source": "/(.*)",
@@ -26,15 +26,12 @@
     }
   ],
 
-
   "redirects": [
     {
       "source": "/(.*)",
       "destination": "https://agalapitz.co.il/$1",
       "permanent": true,
-      "has": [
-        { "type": "header", "key": "x-forwarded-proto", "value": "http" }
-      ]
+      "has": [{ "type": "header", "key": "x-forwarded-proto", "value": "http" }]
     }
   ]
 }
