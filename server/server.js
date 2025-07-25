@@ -6,6 +6,7 @@ const dotenv = require('dotenv');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const cookieSession = require('cookie-session');
+const fetch = require('node-fetch');
 dotenv.config();
 
 const app = express();
@@ -94,6 +95,18 @@ app.use('/api/products', require('./routes/product'));
 app.use('/api/orders', require('./routes/order'));
 app.use('/api/order-items', require('./routes/orderItem'));
 app.use('/api/auth', require('./routes/auth'));
+
+// Endpoint חדש לקריאת APISign מול Hypay
+app.get('/api/hypay-sign', async (req, res) => {
+  try {
+    const params = new URLSearchParams(req.query).toString();
+    const hypayRes = await fetch(`https://pay.hyp.co.il/p/?${params}`);
+    const text = await hypayRes.text();
+    res.send(text);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch from Hypay', details: err.message });
+  }
+});
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)

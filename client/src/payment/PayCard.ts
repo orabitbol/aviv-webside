@@ -38,7 +38,8 @@ export async function redirectToHypPayment({
     ...rest
   };
   const signQuery = new URLSearchParams(signParams).toString();
-  const signRes = await fetch(`https://pay.hyp.co.il/p/?${signQuery}`);
+  // קריאה ל-backend במקום ישירות ל-Hypay
+  const signRes = await fetch(`/api/hypay-sign?${signQuery}`);
   const signText = await signRes.text();
   // הפלט הוא מחרוזת פרמטרים (key1=val1&key2=val2...)
   const payParams = {};
