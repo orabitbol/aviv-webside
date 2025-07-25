@@ -37,6 +37,8 @@ export async function redirectToHypPayment({
     ErrorUrl,
     ...rest
   };
+  // הדפסה לקונסול של הפרמטרים שנשלחים ל-Hypay (שלב החתימה)
+  console.log('Hypay APISign params:', signParams);
   const signQuery = new URLSearchParams(signParams).toString();
   // קריאה ל-backend במקום ישירות ל-Hypay
   const signRes = await fetch(`/api/hypay-sign?${signQuery}`);
@@ -47,6 +49,9 @@ export async function redirectToHypPayment({
     const [key, value] = pair.split('=');
     if (key) payParams[key] = decodeURIComponent(value || '');
   });
+
+  // הדפסה לקונסול של הפרמטרים שנשלחים ל-Hypay (שלב התשלום)
+  console.log('Hypay PAY params:', payParams);
 
   // שלב 2: יצירת טופס תשלום
   const formAction = 'https://pay.hyp.co.il/p/';
