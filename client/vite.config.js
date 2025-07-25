@@ -13,8 +13,9 @@ const __dirname = path.dirname(__filename);
 export default defineConfig({
   plugins: [react()],
   server: {
+    allowedHosts: true,
     proxy: {
-      '/api': 'http://localhost:5000',
+      '/api': process.env.VITE_API_URL
     }
   },
   resolve: {
