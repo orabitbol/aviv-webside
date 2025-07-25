@@ -58,7 +58,7 @@ export async function redirectToHypPayment({
       const input = document.createElement('input');
       input.type = 'hidden';
       input.name = key;
-      input.value = value;
+      input.value = String(value); // ודא שהערך הוא תמיד מחרוזת
       form.appendChild(input);
     }
   });
