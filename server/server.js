@@ -121,20 +121,15 @@ app.post("/api/hypay-sign", async (req, res) => {
       errorUrl,
     } = req.body;
 
-    // ENV בצד שרת
     const { HYP_MASOF, HYP_KEY, HYP_PASSP, HYP_SUCCESS_URL, HYP_ERROR_URL } = process.env;
-    console.log("[ENV]", { HYP_MASOF, KEY: !!HYP_KEY, PASS: !!HYP_PASSP });
-
-    // סכום מעוגל
-    const fixedAmount = Number(amount).toFixed(2);
 
     const params = new URLSearchParams({
       action: "APISign",
       What: "SIGN",
-      Masof: (HYP_MASOF || "").trim(),
-      KEY: (HYP_KEY || "").trim(),
-      PassP: (HYP_PASSP || "").trim(),
-      Amount: fixedAmount,
+      Masof: HYP_MASOF.trim(),
+      KEY: HYP_KEY.trim(),
+      PassP: HYP_PASSP.trim(),
+      Amount: Number(amount).toFixed(2),
       Info: info,
       UTF8: "True",
       UTF8out: "True",
@@ -146,22 +141,25 @@ app.post("/api/hypay-sign", async (req, res) => {
       ErrorUrl: errorUrl || HYP_ERROR_URL,
     });
 
-    console.log("[HYP req]", params.toString());
-
     const hypRes = await fetch("https://pay.hyp.co.il/p/", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: params,
     });
 
-    const text = await hypRes.text();
-    console.log("[HYP res]", text);
+    const text = (await hypRes.text()).trim();
+    const parsed = new URLSearchParams(text);
 
-    if (/(^|&)Error=/.test(text)) {
-      return res.status(400).send(text);
+    // בטל בדיקת רפרר/IP והוסף PassP לטופס
+    parsed.set("CheckRef", "0");
+    parsed.set("CheckHost", "0");
+    parsed.set("PassP", HYP_PASSP.trim());
+
+    if (parsed.has("Error")) {
+      return res.status(400).send(parsed.toString());
     }
 
-    res.send(text);
+    res.send(parsed.toString());
   } catch (err) {
     console.error("[HYP error]", err);
     res.status(500).json({ error: "Failed to fetch from Hypay", details: err.message });
