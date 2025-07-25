@@ -13,7 +13,7 @@ import { CreditCard, MapPin, Check, ArrowRight, ArrowLeft } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { FaCreditCard } from 'react-icons/fa';
 import { SiBit } from 'react-icons/si';
-import { redirectToHypPayment } from '../payment/PayCard';
+import { redirectToHypPayment } from '../payment/ç';
 
 const SOUTHERN_CITIES = [
   "באר שבע", "אילת", "ערד", "דימונה", "נתיבות", "אופקים", "שדרות", "אשקלון", "אשדוד", "קריית גת", "קריית מלאכי"

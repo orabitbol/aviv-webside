@@ -1,27 +1,30 @@
 /// <reference types="vite/client" />
 
-export function redirectToHypPayment({
+export async function redirectToHypPayment({
   amount,
   orderId,
   customerName = '',
   customerId = '000000000',
   info = 'רכישה באתר',
   masof = '',
-  passP = '',
   successUrl = '',
   errorUrl = '',
-  authType = 'passp', // ברירת מחדל: passp
   ...rest
 }) {
-  // מומלץ להגדיר ב-.env: VITE_TERMINAL_NUMBER, VITE_HYP_PASSWORD, VITE_HYP_SUCCESS_URL, VITE_HYP_ERROR_URL
-  const formAction = 'https://icom.yaad.net/p/';
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = formAction;
+  // קריאה לערכים מה-env
+  const KEY = import.meta.env.VITE_HYP_API_KEY || '';
+  const PassP = import.meta.env.VITE_HYP_PASSP || '';
+  const Masof = masof || import.meta.env.VITE_TERMINAL_NUMBER || '';
+  const SuccessUrl = successUrl || import.meta.env.VITE_HYP_SUCCESS_URL || '';
+  const ErrorUrl = errorUrl || import.meta.env.VITE_HYP_ERROR_URL || '';
 
-  const params: Record<string, any> = {
-    action: 'pay',
-    Masof: masof || import.meta.env.VITE_TERMINAL_NUMBER || '',
+  // שלב 1: בקשת חתימה (APISign)
+  const signParams = {
+    action: 'APISign',
+    What: 'SIGN',
+    KEY,
+    PassP,
+    Masof,
     Amount: amount,
     Info: info,
     UTF8: 'True',
@@ -30,19 +33,27 @@ export function redirectToHypPayment({
     ClientName: customerName,
     UserId: customerId,
     Order: orderId,
-    SuccessUrl: successUrl || import.meta.env.VITE_HYP_SUCCESS_URL || '',
-    ErrorUrl: errorUrl || import.meta.env.VITE_HYP_ERROR_URL || '',
-    ...rest // allow extra params if needed
+    SuccessUrl,
+    ErrorUrl,
+    ...rest
   };
+  const signQuery = new URLSearchParams(signParams).toString();
+  const signRes = await fetch(`https://pay.hyp.co.il/p/?${signQuery}`);
+  const signText = await signRes.text();
+  // הפלט הוא מחרוזת פרמטרים (key1=val1&key2=val2...)
+  const payParams = {};
+  signText.split('&').forEach(pair => {
+    const [key, value] = pair.split('=');
+    if (key) payParams[key] = decodeURIComponent(value || '');
+  });
 
-  // רק אם authType הוא passp, הוסף את PassP
-  if (authType === 'passp') {
-    params.PassP = passP || import.meta.env.VITE_HYP_PASSWORD || '';
-  }
+  // שלב 2: יצירת טופס תשלום
+  const formAction = 'https://pay.hyp.co.il/p/';
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = formAction;
 
-  // אל תשלח REFERRER בשום מצב
-
-  Object.entries(params).forEach(([key, value]) => {
+  Object.entries(payParams).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
       const input = document.createElement('input');
       input.type = 'hidden';
