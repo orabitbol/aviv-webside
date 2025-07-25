@@ -22,9 +22,9 @@ export async function redirectToHypPayment({
   const signParams = {
     action: 'APISign',
     What: 'SIGN',
+    Masof,
     KEY,
     PassP,
-    Masof,
     Amount: amount,
     Info: info,
     UTF8: 'True',
@@ -37,23 +37,15 @@ export async function redirectToHypPayment({
     ErrorUrl,
     ...rest
   };
-  // הדפסה לקונסול של הפרמטרים שנשלחים ל-Hypay (שלב החתימה)
-  console.log('Hypay APISign params:', signParams);
   const signQuery = new URLSearchParams(signParams).toString();
-  // קריאה ישירה ל-Hypay מה-frontend
   const signRes = await fetch(`https://pay.hyp.co.il/p/?${signQuery}`);
   const signText = await signRes.text();
-  // הדפסה לקונסול של התשובה המלאה מה-backend (כולל שגיאות HTML)
-  console.log('Hypay signText:', signText);
   // הפלט הוא מחרוזת פרמטרים (key1=val1&key2=val2...)
   const payParams = {};
   signText.split('&').forEach(pair => {
     const [key, value] = pair.split('=');
     if (key) payParams[key] = decodeURIComponent(value || '');
   });
-
-  // הדפסה לקונסול של הפרמטרים שנשלחים ל-Hypay (שלב התשלום)
-  console.log('Hypay PAY params:', payParams);
 
   // שלב 2: יצירת טופס תשלום
   const formAction = 'https://pay.hyp.co.il/p/';
