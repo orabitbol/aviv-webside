@@ -89,7 +89,7 @@ export default function Checkout() {
           customerName: formData.customer_name,
           customerId: formData.customer_phone || '000000000',
           info: 'רכישה באתר',
-          authType: 'referrer', // עדכון: אימות REFERRER בלבד
+          // הסרתי את authType
         });
         setIsProcessing(false);
         return;
