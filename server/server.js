@@ -157,9 +157,10 @@ app.post("/api/hypay-sign", async (req, res) => {
     const text = await hypRes.text();
     console.log("[HYP res]", text);
 
-    if (text.includes("Error")) {
+    if (/(^|&)Error=/.test(text)) {
       return res.status(400).send(text);
     }
+
     res.send(text);
   } catch (err) {
     console.error("[HYP error]", err);
