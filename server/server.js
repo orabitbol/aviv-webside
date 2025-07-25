@@ -45,14 +45,6 @@ const allowedOrigins = [
   process.env.FRONTEND_URL_DEV,
   process.env.FRONTEND_URL_PROD,
   process.env.FRONTEND_URL_PROD2,
-  'https://agalapitz.co.il',
-  'https://aviv-webside-6bghxhdkh-or-abitbols-projects.vercel.app',
-  'https://aviv-webside-6esexnbcd-or-abitbols-projects.vercel.app',
-  'https://aviv-webside-7myb4wtmp-or-abitbols-projects.vercel.app',
-  'https://aviv-webside-fkdct2vgn-or-abitbols-projects.vercel.app',
-  'https://aviv-webside-4kkur3g9z-or-abitbols-projects.vercel.app',
-  'https://aviv-webside-7je097r95-or-abitbols-projects.vercel.app',
-  'https://aviv-webside-a3z2wte7h-or-abitbols-projects.vercel.app',
   // הוסף כאן דומיינים נוספים אם צריך
 ].filter(Boolean);
 
@@ -113,12 +105,13 @@ app.use('/api/orders', require('./routes/order'));
 app.use('/api/order-items', require('./routes/orderItem'));
 app.use('/api/auth', require('./routes/auth'));
 
-// Endpoint חדש לקריאת APISign מול Hypay
+// Endpoint לקריאת APISign מול Hypay (חייב להיות לפני הגשת SPA)
 app.get('/api/hypay-sign', async (req, res) => {
   try {
     const params = new URLSearchParams(req.query).toString();
     const hypayRes = await fetch(`https://pay.hyp.co.il/p/?${params}`);
     const text = await hypayRes.text();
+    console.log('Hypay backend response:', text); // דיבאג
     res.send(text);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch from Hypay', details: err.message });
