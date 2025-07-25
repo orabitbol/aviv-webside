@@ -97,6 +97,17 @@ app.use('/api/orders', require('./routes/order'));
 app.use('/api/order-items', require('./routes/orderItem'));
 app.use('/api/auth', require('./routes/auth'));
 
+// Endpoint לקריאת APISign מול Hypay (חייב להיות לפני הגשת SPA)
+app.get('/api/hypay-sign', async (req, res) => {
+  try {
+    const params = new URLSearchParams(req.query).toString();
+    const hypayRes = await fetch(`https://pay.hyp.co.il/p/?${params}`);
+    const text = await hypayRes.text();
+    res.send(text);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch from Hypay', details: err.message });
+  }
+});
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
