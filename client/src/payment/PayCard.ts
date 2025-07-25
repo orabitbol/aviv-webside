@@ -40,8 +40,8 @@ export async function redirectToHypPayment({
   // הדפסה לקונסול של הפרמטרים שנשלחים ל-Hypay (שלב החתימה)
   console.log('Hypay APISign params:', signParams);
   const signQuery = new URLSearchParams(signParams).toString();
-  // קריאה ל-backend במקום ישירות ל-Hypay
-  const signRes = await fetch(`/api/hypay-sign?${signQuery}`);
+  // קריאה ישירה ל-Hypay מה-frontend
+  const signRes = await fetch(`https://pay.hyp.co.il/p/?${signQuery}`);
   const signText = await signRes.text();
   // הדפסה לקונסול של התשובה המלאה מה-backend (כולל שגיאות HTML)
   console.log('Hypay signText:', signText);
