@@ -8,6 +8,7 @@ const rateLimit = require('express-rate-limit');
 const cookieSession = require('cookie-session');
 const fetch = require('node-fetch');
 const path = require('path');
+const bodyParser = require('body-parser');
 dotenv.config();
 
 const app = express();
@@ -50,7 +51,6 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function(origin, callback) {
-    console.log('CORS request from:', origin);
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
@@ -70,6 +70,7 @@ app.use(express.json({
     }
   }
 }));
+app.use(bodyParser.json());
 app.use(cookieSession({
   name: "session",
   keys: [process.env.SESSION_SECRET],
@@ -98,12 +99,44 @@ app.use('/api/order-items', require('./routes/orderItem'));
 app.use('/api/auth', require('./routes/auth'));
 
 // Endpoint לקריאת APISign מול Hypay (חייב להיות לפני הגשת SPA)
-app.get('/api/hypay-sign', async (req, res) => {
+app.post('/api/hypay-sign', async (req, res) => {
   try {
-    console.log('Hypay /api/hypay-sign params11:', req.query); // דיבאג
-    const params = new URLSearchParams(req.query).toString();
-    const hypayRes = await fetch(`https://pay.hyp.co.il/p/?${params}`);
-    const text = await hypayRes.text();
+    console.log('Hypay /api/hypay-sign BODY:', req.body); // דיבאג
+    const {
+      amount,
+      orderId,
+      customerName = '',
+      customerId = '000000000',
+      info = 'רכישה באתר',
+      successUrl,
+      errorUrl,
+    } = req.body;
+
+    const params = new URLSearchParams({
+      action: 'APISign',
+      What: 'SIGN',
+      Masof: process.env.VITE_TERMINAL_NUMBER || '',
+      KEY: process.env.VITE_HYP_API_KEY || '',
+      PassP: process.env.VITE_HYP_PASSP || '',
+      Amount: String(amount),
+      Info: info,
+      UTF8: 'True',
+      UTF8out: 'True',
+      Sign: 'True',
+      ClientName: customerName,
+      UserId: customerId,
+      Order: String(orderId),
+      SuccessUrl: successUrl || process.env.VITE_HYP_SUCCESS_URL || '',
+      ErrorUrl: errorUrl || process.env.VITE_HYP_ERROR_URL || ''
+    });
+
+    const hypRes = await fetch('https://pay.hyp.co.il/p/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params
+    });
+
+    const text = await hypRes.text();
     res.send(text);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch from Hypay', details: err.message });
