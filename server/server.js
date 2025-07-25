@@ -7,6 +7,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const cookieSession = require('cookie-session');
 const fetch = require('node-fetch');
+const path = require('path');
 dotenv.config();
 
 const app = express();
@@ -81,13 +82,20 @@ app.use(cookieSession({
 app.use('/uploads', (req, res, next) => {
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   const allowedExt = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-  const path = require('path');
   const ext = path.extname(req.path).toLowerCase();
   if (!allowedExt.includes(ext)) {
     return res.status(403).send('Access denied');
   }
   next();
 }, express.static(__dirname + '/uploads'));
+
+// הגשת קבצים סטטיים של ה-frontend (React/Vite)
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// Catch-all route ל-SPA (חייב להיות בסוף, אחרי כל ה-API routes)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+});
 
 // Routes
 app.use('/api/categories', require('./routes/category'));
