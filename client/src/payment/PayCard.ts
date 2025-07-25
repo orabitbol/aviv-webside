@@ -43,6 +43,8 @@ export async function redirectToHypPayment({
   // קריאה ל-backend במקום ישירות ל-Hypay
   const signRes = await fetch(`/api/hypay-sign?${signQuery}`);
   const signText = await signRes.text();
+  // הדפסה לקונסול של התשובה המלאה מה-backend (כולל שגיאות HTML)
+  console.log('Hypay signText:', signText);
   // הפלט הוא מחרוזת פרמטרים (key1=val1&key2=val2...)
   const payParams = {};
   signText.split('&').forEach(pair => {
