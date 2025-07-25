@@ -100,6 +100,7 @@ app.use('/api/auth', require('./routes/auth'));
 // Endpoint לקריאת APISign מול Hypay (חייב להיות לפני הגשת SPA)
 app.get('/api/hypay-sign', async (req, res) => {
   try {
+    console.log('Hypay /api/hypay-sign params:', req.query); // דיבאג
     const params = new URLSearchParams(req.query).toString();
     const hypayRes = await fetch(`https://pay.hyp.co.il/p/?${params}`);
     const text = await hypayRes.text();
