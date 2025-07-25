@@ -44,7 +44,16 @@ app.use(limiter);
 const allowedOrigins = [
   process.env.FRONTEND_URL_DEV,
   process.env.FRONTEND_URL_PROD,
-  process.env.FRONTEND_URL_PROD2
+  process.env.FRONTEND_URL_PROD2,
+  'https://agalapitz.co.il',
+  'https://aviv-webside-6bghxhdkh-or-abitbols-projects.vercel.app',
+  'https://aviv-webside-6esexnbcd-or-abitbols-projects.vercel.app',
+  'https://aviv-webside-7myb4wtmp-or-abitbols-projects.vercel.app',
+  'https://aviv-webside-fkdct2vgn-or-abitbols-projects.vercel.app',
+  'https://aviv-webside-4kkur3g9z-or-abitbols-projects.vercel.app',
+  'https://aviv-webside-7je097r95-or-abitbols-projects.vercel.app',
+  'https://aviv-webside-a3z2wte7h-or-abitbols-projects.vercel.app',
+  // הוסף כאן דומיינים נוספים אם צריך
 ].filter(Boolean);
 
 app.use(cors({
