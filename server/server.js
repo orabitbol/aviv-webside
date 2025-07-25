@@ -90,14 +90,6 @@ app.use('/uploads', (req, res, next) => {
   next();
 }, express.static(__dirname + '/uploads'));
 
-// הגשת קבצים סטטיים של ה-frontend (React/Vite)
-app.use(express.static(path.join(__dirname, '../client/dist')));
-
-// Catch-all route ל-SPA (חייב להיות בסוף, אחרי כל ה-API routes)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-});
-
 // Routes
 app.use('/api/categories', require('./routes/category'));
 app.use('/api/products', require('./routes/product'));
@@ -116,6 +108,14 @@ app.get('/api/hypay-sign', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch from Hypay', details: err.message });
   }
+});
+
+// הגשת קבצים סטטיים של ה-frontend (React/Vite)
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// Catch-all route ל-SPA (חייב להיות בסוף, אחרי כל ה-API routes)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
 
 // MongoDB connection
