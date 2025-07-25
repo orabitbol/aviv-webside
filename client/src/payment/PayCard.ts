@@ -41,7 +41,6 @@ export async function redirectToHypPayment({
   console.log('signQuery:', signQuery); // דיבאג
   // קריאה ל-backend עם method GET בלבד
   const signRes = await fetch(`/api/hypay-sign?${signQuery}`); // אין method ואין body
-  debugger
   const signText = await signRes.text();
   // הפלט הוא מחרוזת פרמטרים (key1=val1&key2=val2...)
   const payParams = {};
@@ -49,13 +48,11 @@ export async function redirectToHypPayment({
     const [key, value] = pair.split('=');
     if (key) payParams[key] = decodeURIComponent(value || '');
   });
-debugger
   // שלב 2: יצירת טופס תשלום
   const formAction = 'https://pay.hyp.co.il/p/';
   const form = document.createElement('form');
   form.method = 'POST';
   form.action = formAction;
-debugger
   Object.entries(payParams).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
       const input = document.createElement('input');
