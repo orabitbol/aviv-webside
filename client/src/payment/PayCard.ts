@@ -7,16 +7,14 @@ export async function redirectToHypPayment({
   customerName = "",
   customerId = "000000000",
   info = "רכישה באתר",
-  successUrl,
-  errorUrl,
+
 }: {
   amount: number | string;
   orderId: number | string;
   customerName?: string;
   customerId?: string;
   info?: string;
-  successUrl?: string;
-  errorUrl?: string;
+
 }) {
   const cleanAmount = Number(amount);
   const payload = {
@@ -25,18 +23,17 @@ export async function redirectToHypPayment({
     customerName,
     customerId,
     info,
-    successUrl,
-    errorUrl,
   };
 
   const apiBase = getApiBaseUrl(); // חייב להצביע לשרת ה‑Express
+
   const res = await fetch(`${apiBase}/api/hypay-sign`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
     body: JSON.stringify(payload),
   });
-
+  console.log("res", res);
   const text = (await res.text()).trim();
   if (!res.ok || !text) {
     throw new Error(`HYP sign failed: HTTP ${res.status} ${text}`);
