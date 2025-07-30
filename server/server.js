@@ -142,8 +142,8 @@ app.post("/api/hypay-sign", async (req, res) => {
       ClientName: customerName,
       UserId: customerId,
       Order: String(orderId),
-      SuccessUrl: successUrl || HYP_SUCCESS_URL,
-      ErrorUrl: errorUrl || HYP_ERROR_URL,
+    //  SuccessUrl: successUrl || HYP_SUCCESS_URL,
+      //ErrorUrl: errorUrl || HYP_ERROR_URL,
     });
 
     console.log("[HYP req]", params.toString());
