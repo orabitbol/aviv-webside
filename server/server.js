@@ -116,10 +116,12 @@ app.post("/api/hypay-sign", async (req, res) => {
     } = req.body;
 
     // ENV בצד שרת - בדוק שהשמות נכונים
-    const HYP_MASOF = process.env.HYP_MASOF || process.env.VITE_TERMINAL_NUMBER;
-    const HYP_KEY = process.env.HYP_KEY || process.env.VITE_HYP_API_KEY;
-    const HYP_PASSP = process.env.HYP_PASSP || process.env.VITE_HYP_PASSP;
+    // לבדיקה - נשתמש במסוף הטסט של המתכנת
+    const HYP_MASOF = process.env.HYP_MASOF || process.env.VITE_TERMINAL_NUMBER || "0010326215";
+    const HYP_KEY = process.env.HYP_KEY || process.env.VITE_HYP_API_KEY || "51203c371f8829f82c697edb29c255d57cb88be1";
+    const HYP_PASSP = process.env.HYP_PASSP || process.env.VITE_HYP_PASSP || "hyp1234";
     console.log("[ENV]", { HYP_MASOF, KEY: !!HYP_KEY, PASS: !!HYP_PASSP });
+    console.log("[ENV DETAILS]", { HYP_MASOF, HYP_KEY, HYP_PASSP });
 
     // סכום מעוגל
     const fixedAmount = Number(amount).toFixed(2);
@@ -137,10 +139,12 @@ app.post("/api/hypay-sign", async (req, res) => {
 
     
 
-    const hypRes = await fetch("https://pay.hyp.co.il/p/", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: params,
+    // בדוגמא של המתכנת הם משתמשים ב-GET request
+    const url = `https://pay.hyp.co.il/p/?${params.toString()}`;
+    console.log("[HYP req]", url);
+    
+    const hypRes = await fetch(url, {
+      method: "GET",
     });
 
     const text = await hypRes.text();
