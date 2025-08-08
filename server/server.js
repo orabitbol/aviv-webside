@@ -119,9 +119,9 @@ app.post("/api/hypay-sign", async (req, res) => {
 
 
     // ENV בצד שרת - השתמש במסוף הייצור
-    const HYP_MASOF =  "4502025119";
-    const HYP_KEY =  "e6ceb92b27cca670e019a54eebac105a64f1c6fc";
-    const HYP_PASSP =  "vfvfqhfsav631";
+    const HYP_MASOF =  process.env.HYP_MASOF
+    const HYP_KEY =  process.env.HYP_KEY
+    const HYP_PASSP =  process.env.HYP_PASSP
     console.log("[ENV]", { HYP_MASOF, KEY: !!HYP_KEY, PASS: !!HYP_PASSP });
     console.log("[ENV DETAILS]", { HYP_MASOF, HYP_KEY, HYP_PASSP });
 

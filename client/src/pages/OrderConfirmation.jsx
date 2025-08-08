@@ -25,11 +25,7 @@ export default function OrderConfirmation() {
   const urlParams = new URLSearchParams(window.location.search);
   const hasUrlParams = urlParams.has('Id') || urlParams.has('CCode') || urlParams.has('Amount');
   
-  console.log("order: ", order);
-  console.log("hasUrlParams: ", hasUrlParams);
-  console.log("!order: ", !order);
-  console.log("!order && hasUrlParams: ", !order && hasUrlParams);
-  
+
   // אם יש פרמטרים מה-URL, זה אומר שהתשלום הצליח (לא משנה אם יש order או לא)
   if (hasUrlParams) {
     const ccode = urlParams.get('CCode');
