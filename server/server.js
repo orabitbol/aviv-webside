@@ -135,7 +135,7 @@ app.post("/api/hypay-sign", async (req, res) => {
       What: "SIGN"
     });
 
-    console.log("[HYP req]", params.toString());
+    
 
     const hypRes = await fetch("https://pay.hyp.co.il/p/", {
       method: "POST",

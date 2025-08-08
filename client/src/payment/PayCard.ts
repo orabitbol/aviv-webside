@@ -22,7 +22,6 @@ export async function redirectToHypPayment({
   };
 
   const apiBase = getApiBaseUrl(); // חייב להצביע לשרת ה‑Express
-  debugger;
   const res = await fetch(`${apiBase}/api/hypay-sign`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -31,7 +30,7 @@ export async function redirectToHypPayment({
   });
 
   console.log("payload", payload);
-  debugger;
+
   const text = (await res.text()).trim();
   if (!res.ok || !text) {
     throw new Error(`HYP sign failed: HTTP ${res.status} ${text}`);
