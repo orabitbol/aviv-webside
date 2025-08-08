@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { getApiBaseUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Package, MapPin, ArrowLeft } from "lucide-react";
@@ -25,18 +26,50 @@ export default function OrderConfirmation() {
   const urlParams = new URLSearchParams(window.location.search);
   const hasUrlParams = urlParams.has('Id') || urlParams.has('CCode') || urlParams.has('Amount');
   
-
+  // קבל פרטי השגיאה
+  const ccode = urlParams.get('CCode');
+  const amount = urlParams.get('Amount');
+  const orderId = urlParams.get('Order');
+  const customerName = urlParams.get('Fild1');
+  const customerEmail = urlParams.get('Fild2');
+  
+  // שמור את ההזמנה במסד הנתונים אם התשלום הצליח
+  React.useEffect(() => {
+    if (ccode === '0') {
+      const saveOrderToDatabase = async () => {
+        const pendingOrder = localStorage.getItem('pendingOrder');
+        if (pendingOrder) {
+          try {
+            const orderData = JSON.parse(pendingOrder);
+            orderData.status = "paid"; // עדכן סטטוס לתשלום
+            
+            const orderRes = await fetch(`${getApiBaseUrl()}/api/orders`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(orderData)
+            });
+            
+            if (orderRes.ok) {
+              // מחק את ההזמנה הממתינה
+              localStorage.removeItem('pendingOrder');
+              localStorage.removeItem('cart');
+              window.dispatchEvent(new Event('storage'));
+            }
+          } catch (error) {
+            console.error('שגיאה בשמירת ההזמנה:', error);
+          }
+        }
+      };
+      
+      saveOrderToDatabase();
+    }
+  }, [ccode]);
+  
   // אם יש פרמטרים מה-URL, זה אומר שהתשלום הצליח (לא משנה אם יש order או לא)
   if (hasUrlParams) {
-    const ccode = urlParams.get('CCode');
-    const amount = urlParams.get('Amount');
-    const orderId = urlParams.get('Order');
-    const customerName = urlParams.get('Fild1');
-    const customerEmail = urlParams.get('Fild2');
-    
     // בדוק אם התשלום הצליח (CCode=0)
     if (ccode === '0') {
-      return (
+    return (
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
             <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">

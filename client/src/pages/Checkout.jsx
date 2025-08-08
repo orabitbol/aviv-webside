@@ -81,8 +81,30 @@ export default function Checkout() {
     try {
       const totalAmount = getTotalPrice() + 5.99;
       if (formData.payment_method === 'credit_card') {
-        // צור מזהה הזמנה ייחודי (אפשר להשתמש ב-timestamp או uuid)
-        const orderId = Date.now();
+        // שמור את פרטי ההזמנה ב-localStorage כדי לשמור אותם אחרי התשלום
+        const orderData = {
+          customerName: formData.customer_name,
+          customerEmail: formData.customer_email,
+          address: formData.shipping_address,
+          phone: formData.customer_phone,
+          total: totalAmount,
+          status: "pending",
+          payment_method: "credit_card",
+          items: cartItems.map(item => ({
+            product_id: item.product_id || item.id,
+            product_name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            subtotal: item.price * item.quantity,
+            selectedWeight: item.selectedWeight,
+            base_weight: item.base_weight,
+            base_price: item.base_price,
+            image: item.image || item.image_url
+          }))
+        };
+        
+        localStorage.setItem('pendingOrder', JSON.stringify(orderData));
+        
         redirectToHypPayment({
           amount: totalAmount,
           orderId: Date.now(),
