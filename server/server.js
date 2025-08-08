@@ -115,8 +115,7 @@ app.post("/api/hypay-sign", async (req, res) => {
       amount,
     } = req.body;
 
-    // ENV בצד שרת - בדוק שהשמות נכונים
-    // לבדיקה - נשתמש במסוף הטסט של המתכנת
+
     const HYP_MASOF = process.env.HYP_MASOF || process.env.VITE_TERMINAL_NUMBER || "0010326215";
     const HYP_KEY = process.env.HYP_KEY || process.env.VITE_HYP_API_KEY || "51203c371f8829f82c697edb29c255d57cb88be1";
     const HYP_PASSP = process.env.HYP_PASSP || process.env.VITE_HYP_PASSP || "hyp1234";
