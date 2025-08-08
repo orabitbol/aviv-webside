@@ -125,7 +125,7 @@ app.post("/api/hypay-sign", async (req, res) => {
     // סכום מעוגל
     const fixedAmount = Number(amount).toFixed(2);
 
-    // פרמטרים בסיסיים בלבד כמו בדוגמא של המתכנת
+    // פרמטרים בסיסיים בלבד בדיוק כמו בדוגמא של המתכנת
     const params = new URLSearchParams({
       action: "APISign",
       Masof: (HYP_MASOF || "").trim(),
@@ -133,10 +133,7 @@ app.post("/api/hypay-sign", async (req, res) => {
       PassP: (HYP_PASSP || "").trim(),
       Sign: "True",
       KEY: (HYP_KEY || "").trim(),
-      What: "SIGN",
-      Order: String(Date.now()), // הוספת מזהה הזמנה
-      SuccessUrl: process.env.VITE_HYP_SUCCESS_URL || "https://www.agalapitz.co.il/OrderConfirmation",
-      ErrorUrl: process.env.VITE_HYP_ERROR_URL || "https://www.agalapitz.co.il/payment-error"
+      What: "SIGN"
     });
 
     
