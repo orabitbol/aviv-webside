@@ -118,10 +118,10 @@ app.post("/api/hypay-sign", async (req, res) => {
     } = req.body;
 
 
-    // ENV בצד שרת - השתמש במשתנים הקיימים
-    const HYP_MASOF = process.env.VITE_TERMINAL_NUMBER || "0010326215";
-    const HYP_KEY = process.env.VITE_HYP_API_KEY || "51203c371f8829f82c697edb29c255d57cb88be1";
-    const HYP_PASSP = process.env.VITE_HYP_PASSP || "hyp1234";
+    // ENV בצד שרת - השתמש במסוף הייצור
+    const HYP_MASOF =  "4502025119";
+    const HYP_KEY =  "e6ceb92b27cca670e019a54eebac105a64f1c6fc";
+    const HYP_PASSP =  "vfvfqhfsav631";
     console.log("[ENV]", { HYP_MASOF, KEY: !!HYP_KEY, PASS: !!HYP_PASSP });
     console.log("[ENV DETAILS]", { HYP_MASOF, HYP_KEY, HYP_PASSP });
 
