@@ -113,37 +113,26 @@ app.post("/api/hypay-sign", async (req, res) => {
   try {
     const {
       amount,
-      orderId,
-      customerName = "",
-      customerId = "000000000",
-      info = "רכישה באתר",
-      successUrl,
-      errorUrl,
     } = req.body;
 
-    // ENV בצד שרת
-    const { HYP_MASOF, HYP_KEY, HYP_PASSP, HYP_SUCCESS_URL, HYP_ERROR_URL } = process.env;
+    // ENV בצד שרת - בדוק שהשמות נכונים
+    const HYP_MASOF = process.env.HYP_MASOF || process.env.VITE_TERMINAL_NUMBER;
+    const HYP_KEY = process.env.HYP_KEY || process.env.VITE_HYP_API_KEY;
+    const HYP_PASSP = process.env.HYP_PASSP || process.env.VITE_HYP_PASSP;
     console.log("[ENV]", { HYP_MASOF, KEY: !!HYP_KEY, PASS: !!HYP_PASSP });
 
     // סכום מעוגל
     const fixedAmount = Number(amount).toFixed(2);
 
+    // פרמטרים בסיסיים בלבד כמו בדוגמא של המתכנת
     const params = new URLSearchParams({
       action: "APISign",
-      What: "SIGN",
       Masof: (HYP_MASOF || "").trim(),
-      KEY: (HYP_KEY || "").trim(),
-      PassP: (HYP_PASSP || "").trim(),
       Amount: fixedAmount,
-      Info: info,
-      UTF8: "True",
-      UTF8out: "True",
+      PassP: (HYP_PASSP || "").trim(),
       Sign: "True",
-      ClientName: customerName,
-      UserId: customerId,
-      Order: String(orderId),
-    //  SuccessUrl: successUrl || HYP_SUCCESS_URL,
-      //ErrorUrl: errorUrl || HYP_ERROR_URL,
+      KEY: (HYP_KEY || "").trim(),
+      What: "SIGN"
     });
 
     console.log("[HYP req]", params.toString());

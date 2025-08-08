@@ -19,10 +19,6 @@ export async function redirectToHypPayment({
   const cleanAmount = Number(amount);
   const payload = {
     amount: Number.isFinite(cleanAmount) ? cleanAmount : amount,
-    orderId,
-    customerName,
-    customerId,
-    info,
   };
 
   const apiBase = getApiBaseUrl(); // חייב להצביע לשרת ה‑Express
@@ -34,7 +30,7 @@ export async function redirectToHypPayment({
     body: JSON.stringify(payload),
   });
 
-  console.log("res", res);
+  console.log("payload", payload);
   debugger;
   const text = (await res.text()).trim();
   if (!res.ok || !text) {
