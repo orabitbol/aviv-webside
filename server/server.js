@@ -14,12 +14,11 @@ dotenv.config();
 const app = express();
 app.set("trust proxy", 1);
 
-// Helmet for security headers - לוקאלי - פחות הגבלות
+// Helmet for security headers
 const helmetCspDirectives = {
   ...helmet.contentSecurityPolicy.getDefaultDirectives(),
   "img-src": [
     "'self'",
-
     process.env.FRONTEND_URL_PROD,
     process.env.FRONTEND_URL_DEV,
     "data:",
@@ -42,11 +41,12 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CORS - לוקאלי - תמיד אפשר localhost
+// CORS - allow only your domain and localhost (adjust as needed)
 const allowedOrigins = [
   process.env.FRONTEND_URL_DEV,
   process.env.FRONTEND_URL_PROD,
   process.env.FRONTEND_URL_PROD2,
+  // Add additional domains here if needed
 ].filter(Boolean);
 
 app.use(
@@ -78,10 +78,10 @@ app.use(bodyParser.json());
 app.use(
   cookieSession({
     name: "session",
-    keys: [process.env.בג || "dev-secret"],
+    keys: [process.env.SESSION_SECRET],
     maxAge: 24 * 60 * 60 * 1000,
-    sameSite: "lax", // לוקאלי - תמיד lax
-    secure: false, // לוקאלי - תמיד false
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: process.env.NODE_ENV === "production",
     httpOnly: true,
   })
 );
@@ -101,16 +101,12 @@ app.use(
   express.static(__dirname + "/uploads")
 );
 
-// Routes - לוקאלי - רק אם יש MongoDB
-if (process.env.MONGO_URI) {
-  app.use("/api/categories", require("./routes/category"));
-  app.use("/api/products", require("./routes/product"));
-  app.use("/api/orders", require("./routes/order"));
-  app.use("/api/order-items", require("./routes/orderItem"));
-  app.use("/api/auth", require("./routes/auth"));
-} else {
-  console.log("Skipping database routes - no MongoDB connection");
-}
+// Routes
+app.use("/api/categories", require("./routes/category"));
+app.use("/api/products", require("./routes/product"));
+app.use("/api/orders", require("./routes/order"));
+app.use("/api/order-items", require("./routes/orderItem"));
+app.use("/api/auth", require("./routes/auth"));
 
 // --- Hypay APISign ---
 app.post("/api/hypay-sign", async (req, res) => {
@@ -167,30 +163,23 @@ app.post("/api/hypay-sign", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch from Hypay", details: err.message });
   }
 });
-// MongoDB connection - לוקאלי - אפשר להריץ בלי MongoDB
-if (process.env.MONGO_URI) {
-  mongoose
-    .connect(process.env.MONGO_URI)
-    .then(() => {
-      console.log("MongoDB connected");
-    })
-    .catch((err) => {
-      console.error("MongoDB connection error:", err);
+// MongoDB connection
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("MongoDB connected");
+    console.log("NODE_ENV:", process.env.NODE_ENV);
+    console.log("Session cookie config:", {
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     });
-} else {
-  console.log("No MongoDB URI - running without database");
-}
-
-console.log("NODE_ENV:", process.env.NODE_ENV);
-console.log("Session cookie config:", {
-  secure: false,
-  sameSite: "lax",
-});
-
-app.listen(process.env.PORT || 5000, () => {
-  console.log("Server running on port", process.env.PORT || 5000);
-  console.log("Local development mode - ready for testing!");
-});
+    app.listen(process.env.PORT || 5000, () => {
+      console.log("Server running on port", process.env.PORT || 5000);
+    });
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+  });
 
 app.get("/", (req, res) => {
   res.send("NutHub backend is running!");

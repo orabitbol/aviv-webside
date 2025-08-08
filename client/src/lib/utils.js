@@ -6,8 +6,7 @@ export function cn(...inputs) {
 }
 
 export function getApiBaseUrl() {
-  // לוקאלי - תמיד השתמש בשרת המקומי
-  return import.meta.env.VITE_API_BASE_URL;
+  return import.meta.env.VITE_API_URL || '';
 } 
 export function getPhoneNumber() {
   return import.meta.env.VITE_PHONE_NUMBER || '';
