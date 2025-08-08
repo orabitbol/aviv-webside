@@ -17,10 +17,109 @@ export default function OrderConfirmation() {
       obj[key] = value;
     }
     if (Object.keys(obj).length > 0) {
-      console.log("פרמטרים מה-URL (YaadPay redirect):", obj);
+      console.log("פרמטרים מה-URL (Hypay redirect):", obj);
     }
   }, []);
+
+  // בדוק אם יש פרמטרים מה-URL (מגיע מ-Hypay)
+  const urlParams = new URLSearchParams(window.location.search);
+  const hasUrlParams = urlParams.has('Id') || urlParams.has('CCode') || urlParams.has('Amount');
+  
   console.log("order: ", order);
+  console.log("hasUrlParams: ", hasUrlParams);
+  console.log("!order: ", !order);
+  console.log("!order && hasUrlParams: ", !order && hasUrlParams);
+  
+  // אם יש פרמטרים מה-URL, זה אומר שהתשלום הצליח (לא משנה אם יש order או לא)
+  if (hasUrlParams) {
+    const ccode = urlParams.get('CCode');
+    const amount = urlParams.get('Amount');
+    const orderId = urlParams.get('Order');
+    const customerName = urlParams.get('Fild1');
+    const customerEmail = urlParams.get('Fild2');
+    
+    // בדוק אם התשלום הצליח (CCode=0)
+    if (ccode === '0') {
+      return (
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-success" />
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-text mb-4">
+              התשלום{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-success to-primary">
+                אושר!
+              </span>
+            </h1>
+            <p className="text-lg text-muted mb-8">
+              תודה על הזמנתך. קיבלנו את הזמנתך ונעבד אותה בהקדם.
+            </p>
+            
+            {/* פרטי התשלום */}
+            <Card className="border-2 border-border shadow-xl bg-surface/90 backdrop-blur-md rounded-2xl mb-8">
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-right">
+                  <div>
+                    <h3 className="font-semibold text-text mb-2">פרטי לקוח</h3>
+                    <div className="space-y-1 text-sm">
+                      <p>
+                        <span className="font-medium">שם:</span> {customerName || 'לא צוין'}
+                      </p>
+                      <p>
+                        <span className="font-medium">דוא&quot;ל:</span> {customerEmail || 'לא צוין'}
+                      </p>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-text mb-2">פרטי תשלום</h3>
+                    <div className="space-y-1 text-sm">
+                      <p>
+                        <span className="font-medium">מספר הזמנה:</span> {orderId || 'לא צוין'}
+                      </p>
+                      <p>
+                        <span className="font-medium">סכום:</span> 
+                        <span className="text-success font-bold"> ₪{amount || '0'}</span>
+                      </p>
+                      <p>
+                        <span className="font-medium">סטטוס:</span>
+                        <span className="ml-2 px-2 py-1 bg-success/20 text-success rounded-full text-xs">
+                          אושר
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Link to={createPageUrl("Homepage")}>
+              <Button className="bg-gradient-to-r from-primary to-accent hover:from-accent hover:to-primary text-white rounded-full font-bold shadow-xl transition-all">
+                חזרה לדף הבית
+              </Button>
+            </Link>
+          </div>
+        </div>
+      );
+    } else {
+      // התשלום נכשל
+      return (
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-text mb-4">התשלום נכשל</h1>
+            <p className="text-muted mb-8">לא הצלחנו לעבד את התשלום שלך. נסה שוב או בחר אמצעי תשלום אחר.</p>
+            <Link to={createPageUrl("Homepage")}>
+              <Button className="bg-gradient-to-r from-primary to-accent hover:from-accent hover:to-primary text-white rounded-full font-bold shadow-xl transition-all">
+                חזרה לדף הבית
+              </Button>
+            </Link>
+          </div>
+        </div>
+      );
+    }
+  }
+  
+  // אם אין order ואין פרמטרים מה-URL
   if (!order) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -205,7 +304,7 @@ export default function OrderConfirmation() {
                     <>
                       <tr>
                         <td colSpan={4} className="text-left font-bold">
-                          סה"כ ביניים (מוצרים):
+                          סה&quot;כ ביניים (מוצרים):
                         </td>
                         <td className="text-success font-bold">
                           ₪{subtotal.toFixed(2)}
@@ -221,7 +320,7 @@ export default function OrderConfirmation() {
                       </tr>
                       <tr>
                         <td colSpan={4} className="text-left font-bold text-lg">
-                          סה"כ לתשלום (כולל משלוח):
+                          סה&quot;כ לתשלום (כולל משלוח):
                         </td>
                         <td className="text-success font-bold text-lg">
                           ₪{total.toFixed(2)}
