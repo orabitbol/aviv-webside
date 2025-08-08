@@ -136,10 +136,7 @@ app.post("/api/hypay-sign", async (req, res) => {
       PassP: (HYP_PASSP || "").trim(),
       Sign: "True",
       KEY: (HYP_KEY || "").trim(),
-      What: "SIGN",
-      ClientName: customerName,
-      UserId: customerId,
-      Info: info
+      What: "SIGN"
     });
 
     
