@@ -19,6 +19,9 @@ export async function redirectToHypPayment({
   const cleanAmount = Number(amount);
   const payload = {
     amount: Number.isFinite(cleanAmount) ? cleanAmount : amount,
+    customerName,
+    customerId,
+    info,
   };
 
   const apiBase = getApiBaseUrl(); // חייב להצביע לשרת ה‑Express

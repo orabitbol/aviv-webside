@@ -85,6 +85,10 @@ export default function Checkout() {
         const orderId = Date.now();
         redirectToHypPayment({
           amount: totalAmount,
+          orderId: Date.now(),
+          customerName: formData.customer_name,
+          customerId: formData.customer_phone || '000000000',
+          info: 'רכישה באתר',
         });
         setIsProcessing(false);
         return;

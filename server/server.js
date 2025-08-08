@@ -112,6 +112,9 @@ app.post("/api/hypay-sign", async (req, res) => {
   try {
     const {
       amount,
+      customerName = "",
+      customerId = "000000000",
+      info = "רכישה באתר",
     } = req.body;
 
 
@@ -133,7 +136,10 @@ app.post("/api/hypay-sign", async (req, res) => {
       PassP: (HYP_PASSP || "").trim(),
       Sign: "True",
       KEY: (HYP_KEY || "").trim(),
-      What: "SIGN"
+      What: "SIGN",
+      ClientName: customerName,
+      UserId: customerId,
+      Info: info
     });
 
     
