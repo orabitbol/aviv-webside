@@ -13,7 +13,7 @@ import { CreditCard, MapPin, Check, ArrowRight, ArrowLeft } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { FaCreditCard } from 'react-icons/fa';
 import { SiBit } from 'react-icons/si';
-import { redirectToHypPayment } from '../payment/PayCard';
+// import { redirectToHypPayment } from '../payment/PayCard'; // TEMPORARY: לא בשימוש
 
 const SOUTHERN_CITIES = [
   "באר שבע", "אילת", "ערד", "דימונה", "נתיבות", "אופקים", "שדרות", "אשקלון", "אשדוד", "קריית גת", "קריית מלאכי"
@@ -81,14 +81,14 @@ export default function Checkout() {
     try {
       const totalAmount = getTotalPrice() + 5.99;
       if (formData.payment_method === 'credit_card') {
-        // שמור את פרטי ההזמנה ב-localStorage כדי לשמור אותם אחרי התשלום
+        // TEMPORARY: ישירות לדף הצלחה בלי Hypay
         const orderData = {
           customerName: formData.customer_name,
           customerEmail: formData.customer_email,
           address: formData.shipping_address,
           phone: formData.customer_phone,
           total: totalAmount,
-          status: "pending",
+          status: "paid", // ישירות לתשלום
           payment_method: "credit_card",
           items: cartItems.map(item => ({
             product_id: item.product_id || item.id,
@@ -103,15 +103,30 @@ export default function Checkout() {
           }))
         };
         
-        localStorage.setItem('pendingOrder', JSON.stringify(orderData));
+        // שמור ישירות במסד הנתונים
+        try {
+          const orderRes = await fetch(`${getApiBaseUrl()}/api/orders`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(orderData)
+          });
+          
+          if (orderRes.ok) {
+            localStorage.removeItem('cart');
+            window.dispatchEvent(new Event('storage'));
+            toast.success('ההזמנה בוצעה בהצלחה!');
+            navigate(createPageUrl("OrderConfirmation"), {
+              state: {
+                order: orderData,
+                items: orderData.items
+              }
+            });
+          }
+        } catch (error) {
+          console.error('שגיאה בעיבוד ההזמנה:', error);
+          toast.error('שגיאה בעיבוד ההזמנה. אנא נסה שוב.');
+        }
         
-        redirectToHypPayment({
-          amount: totalAmount,
-          orderId: Date.now(),
-          customerName: formData.customer_name,
-          customerId: formData.customer_phone || '000000000',
-          info: 'רכישה באתר',
-        });
         setIsProcessing(false);
         return;
       }
