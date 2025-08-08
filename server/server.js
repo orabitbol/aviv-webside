@@ -41,12 +41,11 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CORS - allow only your domain and localhost (adjust as needed)
+
 const allowedOrigins = [
   process.env.FRONTEND_URL_DEV,
   process.env.FRONTEND_URL_PROD,
   process.env.FRONTEND_URL_PROD2,
-  // Add additional domains here if needed
 ].filter(Boolean);
 
 app.use(
@@ -116,9 +115,10 @@ app.post("/api/hypay-sign", async (req, res) => {
     } = req.body;
 
 
-    const HYP_MASOF = process.env.HYP_MASOF || process.env.VITE_TERMINAL_NUMBER || "0010326215";
-    const HYP_KEY = process.env.HYP_KEY || process.env.VITE_HYP_API_KEY || "51203c371f8829f82c697edb29c255d57cb88be1";
-    const HYP_PASSP = process.env.HYP_PASSP || process.env.VITE_HYP_PASSP || "hyp1234";
+    // ENV בצד שרת - השתמש במשתנים הקיימים
+    const HYP_MASOF = process.env.VITE_TERMINAL_NUMBER || "0010326215";
+    const HYP_KEY = process.env.VITE_HYP_API_KEY || "51203c371f8829f82c697edb29c255d57cb88be1";
+    const HYP_PASSP = process.env.VITE_HYP_PASSP || "hyp1234";
     console.log("[ENV]", { HYP_MASOF, KEY: !!HYP_KEY, PASS: !!HYP_PASSP });
     console.log("[ENV DETAILS]", { HYP_MASOF, HYP_KEY, HYP_PASSP });
 
@@ -135,8 +135,8 @@ app.post("/api/hypay-sign", async (req, res) => {
       KEY: (HYP_KEY || "").trim(),
       What: "SIGN",
       Order: String(Date.now()), // הוספת מזהה הזמנה
-      SuccessUrl: "https://www.agalapitz.co.il/OrderConfirmation",
-      ErrorUrl: "https://www.agalapitz.co.il/payment-error"
+      SuccessUrl: process.env.VITE_HYP_SUCCESS_URL || "https://www.agalapitz.co.il/OrderConfirmation",
+      ErrorUrl: process.env.VITE_HYP_ERROR_URL || "https://www.agalapitz.co.il/payment-error"
     });
 
     

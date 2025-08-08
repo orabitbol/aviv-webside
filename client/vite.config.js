@@ -15,7 +15,7 @@ export default defineConfig({
   server: {
     allowedHosts: true,
     proxy: {
-      '/api': process.env.VITE_API_URL
+      '/api': process.env.VITE_API_URL 
     }
   },
   resolve: {
