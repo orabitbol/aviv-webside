@@ -14,11 +14,12 @@ dotenv.config();
 const app = express();
 app.set("trust proxy", 1);
 
-// Helmet for security headers
+// Helmet for security headers - לוקאלי - פחות הגבלות
 const helmetCspDirectives = {
   ...helmet.contentSecurityPolicy.getDefaultDirectives(),
   "img-src": [
     "'self'",
+
     process.env.FRONTEND_URL_PROD,
     process.env.FRONTEND_URL_DEV,
     "data:",
@@ -41,12 +42,11 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CORS - allow only your domain and localhost (adjust as needed)
+// CORS - לוקאלי - תמיד אפשר localhost
 const allowedOrigins = [
   process.env.FRONTEND_URL_DEV,
   process.env.FRONTEND_URL_PROD,
   process.env.FRONTEND_URL_PROD2,
-  // הוסף כאן דומיינים נוספים אם צריך
 ].filter(Boolean);
 
 app.use(
@@ -78,15 +78,15 @@ app.use(bodyParser.json());
 app.use(
   cookieSession({
     name: "session",
-    keys: [process.env.SESSION_SECRET],
+    keys: [process.env.בג || "dev-secret"],
     maxAge: 24 * 60 * 60 * 1000,
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax", // לוקאלי - תמיד lax
+    secure: false, // לוקאלי - תמיד false
     httpOnly: true,
   })
 );
 
-// הגשת קבצים סטטיים מתיקיית uploads (רק תמונות)
+
 app.use(
   "/uploads",
   (req, res, next) => {
@@ -101,12 +101,16 @@ app.use(
   express.static(__dirname + "/uploads")
 );
 
-// Routes
-app.use("/api/categories", require("./routes/category"));
-app.use("/api/products", require("./routes/product"));
-app.use("/api/orders", require("./routes/order"));
-app.use("/api/order-items", require("./routes/orderItem"));
-app.use("/api/auth", require("./routes/auth"));
+// Routes - לוקאלי - רק אם יש MongoDB
+if (process.env.MONGO_URI) {
+  app.use("/api/categories", require("./routes/category"));
+  app.use("/api/products", require("./routes/product"));
+  app.use("/api/orders", require("./routes/order"));
+  app.use("/api/order-items", require("./routes/orderItem"));
+  app.use("/api/auth", require("./routes/auth"));
+} else {
+  console.log("Skipping database routes - no MongoDB connection");
+}
 
 // --- Hypay APISign ---
 app.post("/api/hypay-sign", async (req, res) => {
@@ -133,7 +137,10 @@ app.post("/api/hypay-sign", async (req, res) => {
       PassP: (HYP_PASSP || "").trim(),
       Sign: "True",
       KEY: (HYP_KEY || "").trim(),
-      What: "SIGN"
+      What: "SIGN",
+      Order: String(Date.now()), // הוספת מזהה הזמנה
+      SuccessUrl: "https://www.agalapitz.co.il/OrderConfirmation",
+      ErrorUrl: "https://www.agalapitz.co.il/payment-error"
     });
 
     
@@ -141,6 +148,7 @@ app.post("/api/hypay-sign", async (req, res) => {
     // בדוגמא של המתכנת הם משתמשים ב-GET request
     const url = `https://pay.hyp.co.il/p/?${params.toString()}`;
     console.log("[HYP req]", url);
+    console.log("[HYP PARAMS]", Object.fromEntries(params.entries()));
     
     const hypRes = await fetch(url, {
       method: "GET",
@@ -159,23 +167,30 @@ app.post("/api/hypay-sign", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch from Hypay", details: err.message });
   }
 });
-// MongoDB connection
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("MongoDB connected");
-    console.log("NODE_ENV:", process.env.NODE_ENV);
-    console.log("Session cookie config:", {
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+// MongoDB connection - לוקאלי - אפשר להריץ בלי MongoDB
+if (process.env.MONGO_URI) {
+  mongoose
+    .connect(process.env.MONGO_URI)
+    .then(() => {
+      console.log("MongoDB connected");
+    })
+    .catch((err) => {
+      console.error("MongoDB connection error:", err);
     });
-    app.listen(process.env.PORT || 5000, () => {
-      console.log("Server running on port", process.env.PORT || 5000);
-    });
-  })
-  .catch((err) => {
-    console.error("MongoDB connection error:", err);
-  });
+} else {
+  console.log("No MongoDB URI - running without database");
+}
+
+console.log("NODE_ENV:", process.env.NODE_ENV);
+console.log("Session cookie config:", {
+  secure: false,
+  sameSite: "lax",
+});
+
+app.listen(process.env.PORT || 5000, () => {
+  console.log("Server running on port", process.env.PORT || 5000);
+  console.log("Local development mode - ready for testing!");
+});
 
 app.get("/", (req, res) => {
   res.send("NutHub backend is running!");
